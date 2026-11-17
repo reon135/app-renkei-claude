@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude連携アプリ図鑑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* layout idea: 白か黒の地に、5色のステッカーと太い枠・ずらし影。動く見本を主役にした図鑑 */
+:root{
+  --bg:#ffffff; --surface:#f2f3f6; --ink:#0c0d12; --muted:#585e6c; --line:#dadde5;
+  --c1:#2b59ff; --c2:#ff4a3a; --c3:#ffc21a; --c4:#00a870; --c5:#8a4dff;
+  --accent:#2b59ff; --accent-ink:#ffffff; --warn:#a8530a; --muse:#00795c; --claude:#b8431a;
+  --code-bg:#0e1117; --code-ink:#e9ecf3;
+  --display:"Dela Gothic One","Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --sh:5px 5px 0 var(--ink);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#08090c; --surface:#15171d; --ink:#f3f4f7; --muted:#a3a9b6; --line:#2b2e38;
+    --c1:#6f93ff; --c2:#ff6b5c; --c3:#ffd04d; --c4:#35d39b; --c5:#ad82ff;
+    --accent:#6f93ff; --accent-ink:#08090c; --warn:#f2b55c; --muse:#4fd6b0; --claude:#f59a70;
+    --code-bg:#000000; --code-ink:#e9ecf3; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#08090c; --surface:#15171d; --ink:#f3f4f7; --muted:#a3a9b6; --line:#2b2e38;
+  --c1:#6f93ff; --c2:#ff6b5c; --c3:#ffd04d; --c4:#35d39b; --c5:#ad82ff;
+  --accent:#6f93ff; --accent-ink:#08090c; --warn:#f2b55c; --muse:#4fd6b0; --claude:#f59a70;
+  --code-bg:#000000; --code-ink:#e9ecf3; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+html,body{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.8;-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--c1);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+h1,h2,h3{line-height:1.35;text-wrap:balance;margin:0}
+h1{font-family:var(--display);font-size:clamp(34px,7vw,68px);font-weight:400;line-height:1.15}
+h2{font-family:var(--display);font-size:clamp(22px,3.6vw,34px);font-weight:400}
+h3{font-size:18px;font-weight:900}
+p{margin:0}
+.lead{color:var(--muted);max-width:40em}
+section{padding:60px 0}
+.sec-head{display:grid;gap:10px;margin-bottom:28px}
+.stk{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 10px;border:2px solid var(--ink);border-radius:999px;background:var(--c3);color:#0c0d12;transform:rotate(-2deg);justify-self:start}
+.stk.b{background:var(--c1);color:#fff}.stk.r{background:var(--c2);color:#fff}.stk.g{background:var(--c4);color:#fff}.stk.v{background:var(--c5);color:#fff}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--ink);background:var(--bg);padding:8px 16px;border-radius:999px;font-weight:900;font-size:14px;text-decoration:none;color:var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.btn.pri{background:var(--c1);color:#fff}
+.btn.yl{background:var(--c3);color:#0c0d12}
+.btn.sm{padding:4px 12px;font-size:12.5px;box-shadow:2px 2px 0 var(--ink)}
+.btn:disabled{opacity:.4;cursor:default}
+/* header */
+header.top{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:2px solid var(--ink)}
+.top .wrap{display:flex;align-items:center;gap:14px;height:54px}
+.logo{font-family:var(--display);font-size:16px;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.top nav{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}
+.top nav a{white-space:nowrap;font-size:13px;font-weight:700;color:var(--muted);text-decoration:none;padding:6px 9px;border-radius:6px}
+.top nav a:hover{color:var(--ink);background:var(--surface)}
+.theme{border:2px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:900;white-space:nowrap}
+/* hero */
+.hero{padding:40px 0 30px;position:relative}
+.hero-grid{display:grid;gap:26px;grid-template-columns:1.05fr .95fr;align-items:center}
+.hero h1 em{font-style:normal;background:var(--c3);color:#0c0d12;padding:0 .12em;border-radius:.12em;display:inline-block;transform:rotate(-1.5deg)}
+.hero p.sub{font-size:18px;font-weight:700;margin-top:16px;max-width:25em}
+.hero .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.heroCv{width:100%;aspect-ratio:4/3;display:block;border:2px solid var(--ink);border-radius:20px;box-shadow:var(--sh);background:var(--surface)}
+.mq{border-block:2px solid var(--ink);background:var(--ink);color:var(--bg);overflow:hidden;white-space:nowrap;padding:8px 0;font-family:var(--display);font-size:15px}
+.mq div{display:inline-block;animation:mq 40s linear infinite;padding-left:0}
+.mq span{margin:0 18px}.mq span::before{content:"▶";margin-right:10px;color:var(--c3);font-size:11px}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* term tooltip */
+.term{border-bottom:2px dotted var(--c1);cursor:help;position:relative;font-weight:700}
+.term::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 8px);z-index:20;width:min(280px,70vw);background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;line-height:1.6;padding:10px 12px;border-radius:10px;opacity:0;visibility:hidden;transition:opacity .15s;pointer-events:none}
+.term:hover::after,.term:focus::after{opacity:1;visibility:visible}
+.g2{display:grid;gap:20px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{display:grid;gap:20px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.box{border:2px solid var(--ink);border-radius:16px;padding:18px;display:grid;gap:10px;align-content:start;background:var(--bg)}
+.box.sh{box-shadow:var(--sh)}
+.box.fill{background:var(--surface)}
+.tag{display:inline-block;font-size:11.5px;font-weight:900;border-radius:999px;padding:1px 9px;border:2px solid currentColor;line-height:1.7;white-space:nowrap}
+.tag.muse{color:var(--muse)} .tag.claude{color:var(--claude)}
+.say{position:relative;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.65;font-weight:500}
+.say::before{content:"";position:absolute;left:22px;top:-7px;width:14px;height:14px;background:var(--ink);transform:rotate(45deg)}
+.caution{border-left:5px solid var(--c3);background:var(--surface);padding:12px 14px;border-radius:0 10px 10px 0;font-size:14px}
+.caution b{color:var(--warn)}
+.small{font-size:13px;color:var(--muted)}
+/* word table */
+.ana{border:2px solid var(--ink);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+.ana .row{display:grid;grid-template-columns:170px 1fr 1.3fr;border-top:1px solid var(--line)}
+.ana .row:first-child{border-top:0;background:var(--ink);color:var(--bg);font-weight:700;font-size:13px}
+.ana .row>div{padding:12px 14px;font-size:14.5px;line-height:1.6}
+.ana .row>div:first-child{font-weight:900}
+.ana .dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;border:2px solid var(--ink);vertical-align:-1px}
+/* prompt compare */
+.pc{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+.pbx{border:2px solid var(--ink);border-radius:12px;padding:12px;font-size:12.5px;line-height:1.7;background:var(--surface);position:relative}
+.pbx b.h{position:absolute;top:-11px;left:10px;background:var(--ink);color:var(--bg);font-size:11px;padding:0 8px;border-radius:999px}
+.pbx.s{background:var(--c3);color:#0c0d12;font-weight:900;font-size:14px}
+.pc .ar{font-family:var(--display);font-size:20px}
+/* repo mock */
+.win{border:2px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--bg);font-size:13px;line-height:1.5}
+.win .bar{display:flex;gap:8px;align-items:center;padding:7px 10px;background:var(--surface);border-bottom:2px solid var(--ink)}
+.win .dots{display:flex;gap:5px}.win .dots i{width:10px;height:10px;border-radius:50%;background:var(--c2)}.win .dots i:nth-child(2){background:var(--c3)}.win .dots i:nth-child(3){background:var(--c4)}
+.win .url{flex:1;background:var(--bg);border:1.5px solid var(--line);border-radius:6px;padding:2px 9px;font-family:var(--mono);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.repo{padding:12px;display:grid;gap:10px}
+.repo .rh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.repo .nm{font-weight:700;font-family:var(--mono);font-size:13px}
+.repo .star{border:1.5px solid var(--line);border-radius:6px;padding:1px 8px;font-size:12px}
+.repo .codeb{background:var(--c4);color:#fff;border-radius:6px;padding:2px 10px;font-weight:700;font-size:12px}
+.repo .files{border:1.5px solid var(--line);border-radius:8px}
+.repo .files div{padding:5px 10px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px;display:flex;justify-content:space-between;gap:8px}
+.repo .files div:first-child{border-top:0}
+.repo .files span{color:var(--muted);font-family:var(--body)}
+.repo .readme{border:1.5px solid var(--line);border-radius:8px;padding:10px;display:grid;gap:6px}
+.repo .cmd{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:6px;overflow-x:auto;white-space:nowrap}
+.pin{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;background:var(--c2);color:#fff;font-family:var(--mono);font-size:11.5px;font-weight:700;flex:none;vertical-align:middle}
+.pins{display:grid;gap:9px;margin:0;padding:0;list-style:none}
+.pins li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:14.5px;line-height:1.6}
+.hl{outline:3px solid var(--c1);outline-offset:2px;border-radius:6px}
+.tree{font-family:var(--mono);font-size:13px;display:grid;gap:8px}
+.tree .f{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center}
+.tree .f span{font-family:var(--body);font-size:13.5px;background:var(--surface);padding:4px 10px;border-radius:8px}
+/* compare */
+.cmp{display:grid;gap:18px;grid-template-columns:1fr 1fr}
+.cvw{position:relative}
+.cvw canvas{width:100%;aspect-ratio:16/9;display:block;border:2px solid var(--ink);border-radius:14px}
+.cvw .lab{position:absolute;left:10px;top:-12px;font-size:12px;font-weight:900;background:var(--ink);color:var(--bg);padding:1px 12px;border-radius:999px;z-index:3}
+.cvw.on canvas{box-shadow:var(--sh)}.cvw.on .lab{background:var(--c2);color:#fff}
+.tgl{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{border:2px solid var(--ink);background:var(--bg);border-radius:999px;padding:4px 13px;font-size:13px;font-weight:900}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+table.t{width:100%;border-collapse:collapse;font-size:14.5px}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:10px 8px;text-align:left;vertical-align:top;line-height:1.6}
+table.t th{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.scroll{overflow-x:auto}
+.big{font-family:var(--display);font-size:44px;line-height:1.05;font-variant-numeric:tabular-nums}
+.big small{font-size:16px;font-family:var(--mono)}
+/* demo */
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.tab{border:2px solid var(--ink);background:var(--bg);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:900;text-align:left;line-height:1.4;box-shadow:3px 3px 0 var(--ink);display:grid;gap:2px}
+.tab small{font-weight:500;color:var(--muted);font-size:11.5px}
+.tab i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--c1)}
+.tab[aria-selected="true"]{background:var(--c3);color:#0c0d12;transform:translate(3px,3px);box-shadow:none}
+.tab[aria-selected="true"] small,.tab[aria-selected="true"] i{color:#0c0d12}
+.demo{display:grid;grid-template-columns:.8fr 1.2fr;gap:20px;align-items:start}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.steps button{width:100%;text-align:left;border:2px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;font-size:14.5px;line-height:1.55;font-weight:700}
+.steps .no{font-family:var(--display);font-size:15px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--ink);background:var(--bg)}
+.steps .tp{display:none;font-weight:500;font-size:13px;color:var(--muted);margin-top:4px}
+.steps li.done .no{background:var(--c4);color:#fff}
+.steps li.on button{border-color:var(--ink);box-shadow:var(--sh);background:var(--surface)}
+.steps li.on .no{background:var(--c2);color:#fff}
+.steps li.on .tp{display:block}
+.player{border:2px solid var(--ink);border-radius:16px;overflow:hidden;box-shadow:var(--sh);background:var(--surface)}
+.pbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-bottom:2px solid var(--ink);background:var(--bg)}
+.pbar .stepno{font-family:var(--mono);font-weight:700;font-size:12.5px;margin-left:auto}
+.capt{padding:10px 14px;font-size:16px;font-weight:900;line-height:1.5;background:var(--ink);color:var(--bg);min-height:3.3em;display:flex;align-items:center;gap:10px}
+.capt b{font-family:var(--display);font-weight:400;background:var(--c3);color:#0c0d12;border-radius:50%;width:28px;height:28px;display:grid;place-items:center;flex:none;font-size:14px}
+.stage{position:relative;padding:14px;min-height:352px;overflow:hidden}
+.scr{display:none}.scr.on{display:block}
+.termw{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:12.5px;line-height:1.75;padding:12px 14px;min-height:280px;white-space:pre-wrap;word-break:break-all}
+.termw .p{color:#7ee0a8}.termw .o{color:#9aa3b5}
+.caret::after{content:"▍";animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.chat{padding:12px;display:grid;gap:10px;min-height:236px;align-content:end}
+.msg{max-width:88%;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.msg.u{justify-self:end;background:var(--c1);color:#fff;border-bottom-right-radius:4px}
+.msg.a{justify-self:start;background:var(--surface);border:1.5px solid var(--line);border-bottom-left-radius:4px}
+.inp{border:2px solid var(--ink);border-radius:12px;padding:8px 12px;min-height:40px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-all;background:var(--bg)}
+.inp:empty::before{content:"メッセージを入力";color:var(--muted)}
+.vcard{margin-top:6px;width:170px;aspect-ratio:16/9;border-radius:8px;background:linear-gradient(135deg,var(--c1),var(--c5));position:relative;overflow:hidden;display:grid;place-items:center}
+.vcard::before{content:"";width:0;height:0;border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent}
+.vcard::after{content:"video.mp4";position:absolute;left:6px;bottom:4px;font-family:var(--mono);font-size:10px;color:#fff}
+.setw{display:grid;grid-template-columns:120px 1fr;min-height:280px}
+.setw .side{border-right:1.5px solid var(--line);padding:10px;display:grid;gap:6px;align-content:start;font-size:12.5px}
+.setw .side div{padding:4px 8px;border-radius:6px}
+.setw .main{padding:12px;display:grid;gap:10px;align-content:start}
+.setw .plus{justify-self:end;border:2px solid var(--ink);border-radius:8px;width:30px;height:28px;display:grid;place-items:center;font-weight:700}
+.setw .menu{justify-self:end;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);font-size:12.5px;display:none}
+.setw .menu div{padding:6px 12px}
+.setw .dz{border:2px dashed var(--line);border-radius:10px;padding:16px;text-align:center;font-size:12.5px;color:var(--muted);display:none}
+.setw .lst{border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;display:none;justify-content:space-between;align-items:center;font-size:13px;font-weight:700}
+.setw .sw{width:34px;height:18px;border-radius:9px;background:var(--c4);position:relative}.setw .sw::after{content:"";position:absolute;right:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+.cursor{position:absolute;left:0;top:0;width:24px;height:24px;z-index:10;pointer-events:none;transition:transform .7s cubic-bezier(.3,.8,.2,1);transform:translate(40px,40px)}
+.cursor::before{content:"";position:absolute;inset:0;background:var(--c2);clip-path:polygon(0 0,0 78%,24% 58%,42% 100%,58% 92%,40% 52%,72% 52%)}
+.cursor.click::after{content:"";position:absolute;left:-12px;top:-12px;width:30px;height:30px;border-radius:50%;border:3px solid var(--c2);animation:ck .6s ease-out}
+@keyframes ck{from{transform:scale(.3);opacity:1}to{transform:scale(1.5);opacity:0}}
+.ptip{padding:10px 14px;font-size:13.5px;border-top:2px solid var(--ink);background:var(--bg);line-height:1.6}
+.ptip b{color:var(--c1)}
+/* cards */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.cards{display:grid;gap:26px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{--k:var(--c1);border:2px solid var(--ink);border-radius:20px;display:grid;align-content:start;background:var(--bg);scroll-margin-top:70px;box-shadow:var(--sh);overflow:hidden;transition:transform .15s}
+.card:hover{transform:translate(-2px,-2px)}
+.card[data-cat="motion"]{--k:var(--c2)}.card[data-cat="look"]{--k:var(--c5)}.card[data-cat="auto"]{--k:var(--c4)}.card[data-cat="idea"]{--k:var(--c3)}.card[data-cat="parts"]{--k:var(--muted)}
+.card.flash{outline:5px solid var(--c3)}
+.card .hd{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;padding:12px 16px;border-bottom:2px solid var(--ink);background:var(--surface)}
+.rank{font-family:var(--display);font-size:30px;line-height:1;background:var(--k);color:#fff;border:2px solid var(--ink);border-radius:12px;padding:8px 10px;min-width:56px;text-align:center;transform:rotate(-4deg)}
+.rank small{font-size:12px;display:block;font-family:var(--body);font-weight:900}
+.rank.tx{font-size:15px;padding:12px 8px}
+.card h3{font-size:19px;line-height:1.3}
+.card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.catp{font-size:11.5px;font-weight:900;padding:1px 9px;border-radius:999px;background:var(--k);color:#fff;border:2px solid var(--ink);line-height:1.7}
+.pvc{width:100%;aspect-ratio:16/9;display:block;border-bottom:2px solid var(--ink);background:var(--surface)}
+.card .bd{padding:16px;display:grid;gap:13px}
+.card .one{font-family:var(--display);font-size:19px;line-height:1.45}
+.card .desc{font-size:14.5px;line-height:1.75}
+.card ul{margin:0;padding-left:1.2em;font-size:14.5px;line-height:1.7}
+.pow{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.pow li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:14.5px;line-height:1.6;font-weight:700}
+.pow li::before{content:"";width:18px;height:18px;border-radius:50%;background:var(--k);border:2px solid var(--ink);margin-top:3px}
+.facts{display:flex;gap:6px;flex-wrap:wrap}
+.facts span{font-size:12px;background:var(--surface);border-radius:6px;padding:2px 8px;font-weight:700}
+.easy{border:2px solid var(--ink);border-radius:14px;overflow:hidden}
+.easy .eh{background:var(--c3);color:#0c0d12;font-weight:900;font-size:13px;padding:5px 12px;border-bottom:2px solid var(--ink)}
+.easy .eb{padding:10px 12px;display:grid;gap:8px;background:var(--bg)}
+.easy .txt{font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-all;font-family:var(--mono);background:var(--surface);border-radius:8px;padding:8px 10px}
+.easy .ea{display:flex;gap:8px;flex-wrap:wrap}
+.mini{border-top:2px dashed var(--line);padding-top:10px;display:none;gap:8px}
+.mini.on{display:grid}
+.mini .mw{border:2px solid var(--ink);border-radius:12px;overflow:hidden}
+.mini .mt{font-size:11.5px;font-weight:900;padding:4px 10px;background:var(--surface);border-bottom:2px solid var(--ink)}
+.mini .ml{padding:10px;display:grid;gap:8px;min-height:96px;align-content:end}
+.mini .mi{padding:0 10px 10px}
+.mini .ms{font-size:12.5px;font-weight:900;color:var(--c1)}
+.cmdrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--code-bg);border-radius:10px;padding:8px 8px 8px 12px}
+.cmdrow code{font-family:var(--mono);font-size:12.5px;color:var(--code-ink);overflow-x:auto;white-space:pre;display:block;line-height:1.7}
+.cmdrow .btn{background:var(--code-ink);color:var(--code-bg);border-color:var(--code-ink);box-shadow:none}
+.lbl{font-size:12px;font-weight:900;color:var(--muted);margin-bottom:3px}
+.prm{background:var(--surface);border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.7;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+details summary{cursor:pointer;font-weight:900;font-size:14px}
+details .in{display:grid;gap:10px;margin-top:10px}
+.card .ft{display:flex;gap:10px;flex-wrap:wrap}
+/* picker / builder */
+.q{display:grid;gap:8px}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.res{border:2px solid var(--ink);border-radius:16px;padding:16px;display:grid;gap:10px;background:var(--c3);color:#0c0d12;box-shadow:var(--sh)}
+.res a{color:#0c0d12}.res .small{color:#3a3f4a}
+.res ol{margin:0;padding-left:1.3em;display:grid;gap:4px}
+.res .caution{background:#fff;color:#0c0d12}
+.form{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.form label{display:grid;gap:4px;font-size:13px;font-weight:900}
+.form select,.form input[type=text]{font:inherit;padding:8px 10px;border:2px solid var(--ink);border-radius:8px;background:var(--bg);color:var(--ink);width:100%}
+.form .wide{grid-column:1/-1}
+.out{background:var(--code-bg);color:var(--code-ink);border-radius:14px;padding:14px;font-size:14px;line-height:1.8;white-space:pre-wrap;border:2px solid var(--ink)}
+.todo{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.todo label{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;border:2px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.6;cursor:pointer}
+.todo input{width:20px;height:20px;margin-top:3px;accent-color:var(--c4)}
+.todo input:checked+span{color:var(--muted);text-decoration:line-through}
+.prog{height:12px;border-radius:6px;border:2px solid var(--ink);overflow:hidden}.prog i{display:block;height:100%;background:var(--c4);width:0;transition:width .3s}
+.faq details{border-bottom:1px solid var(--line);padding:12px 0}
+.faq details p{margin-top:8px;color:var(--muted);font-size:15px;max-width:44em}
+footer{padding:36px 0 60px;border-top:2px solid var(--ink);font-size:13px;color:var(--muted)}
+footer ul{margin:8px 0 0;padding-left:1.2em;display:grid;gap:2px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--c4);color:#fff;border:2px solid var(--ink);padding:8px 16px;border-radius:999px;font-size:13.5px;font-weight:900;opacity:0;transition:.25s;z-index:70;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media (max-width:860px){
+  .hero-grid,.g2,.g3,.cmp,.demo,.cards,.form{grid-template-columns:1fr}
+  .tabs{grid-template-columns:1fr 1fr}
+  .demo .player{order:-1}
+  .ana .row{grid-template-columns:96px 1fr 1.2fr}.ana .row>div{padding:9px;font-size:13px}
+  .pc{grid-template-columns:1fr}.pc .ar{transform:rotate(90deg);justify-self:center}
+  section{padding:46px 0}
+  .setw{grid-template-columns:86px 1fr}
+  .tree .f{grid-template-columns:1fr}
+  .term{position:static}
+  .term::after{position:fixed;left:16px;right:16px;top:auto;bottom:16px;width:auto;z-index:60}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+.card[data-cat="video"]{--k:var(--c2)}.card[data-cat="design"]{--k:var(--c5)}.card[data-cat="sns"]{--k:var(--c1)}.card[data-cat="sell"]{--k:var(--c4)}.card[data-cat="list"]{--k:var(--c3)}.card[data-cat="site"]{--k:var(--c1)}.card[data-cat="ops"]{--k:var(--c4)}.card[data-cat="research"]{--k:var(--c5)}.card[data-cat="ai"]{--k:var(--muted)}
+.ico{font-family:var(--display);font-size:22px;line-height:1;background:var(--k);color:#fff;border:2px solid var(--ink);border-radius:14px;width:52px;height:52px;display:grid;place-items:center;transform:rotate(-4deg)}
+.card[data-cat="list"] .ico,.card[data-cat="list"] .catp{color:#0c0d12}
+.hot{font-size:11.5px;font-weight:900;padding:1px 9px;border-radius:999px;background:var(--c2);color:#fff;border:2px solid var(--ink);line-height:1.7}
+.howp{font-size:11.5px;font-weight:900;padding:1px 9px;border-radius:999px;border:2px solid var(--ink);line-height:1.7;background:var(--bg)}
+.urlrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:var(--code-bg);border-radius:10px;padding:8px 8px 8px 12px}
+.urlrow code{font-family:var(--mono);font-size:12.5px;color:var(--code-ink);overflow-x:auto;white-space:pre;display:block;line-height:1.7}
+.urlrow .btn{background:var(--code-ink);color:var(--code-bg);border-color:var(--code-ink);box-shadow:none}
+.exs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.exs b{font-size:13px}
+.tabs.t3{grid-template-columns:repeat(3,minmax(0,1fr))}
+/* claude settings mock */
+.cs{display:grid;grid-template-columns:128px 1fr;min-height:300px;position:relative}
+.cs .side{border-right:1.5px solid var(--line);padding:10px;display:grid;gap:4px;align-content:start;font-size:12.5px;background:var(--surface)}
+.cs .side div{padding:4px 8px;border-radius:6px}
+.cs .side .act{background:var(--bg);font-weight:900;border:1.5px solid var(--line)}
+.cs .main{padding:12px;display:grid;gap:10px;align-content:start;position:relative}
+.cs .mh{display:flex;justify-content:space-between;align-items:center}
+.cs .mh b{font-size:15px}
+.cbtn{border:2px solid var(--ink);border-radius:8px;padding:2px 10px;font-size:12px;font-weight:900;background:var(--bg)}
+.cmenu{position:absolute;right:12px;top:42px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);font-size:12.5px;display:none;z-index:3;box-shadow:0 8px 24px rgba(0,0,0,.18);overflow:hidden}
+.cmenu div{padding:7px 14px}.cmenu div+div{border-top:1px solid var(--line)}
+.csearch{border:1.5px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12.5px;min-height:30px;background:var(--bg)}
+.csearch:empty::before{content:"コネクタを検索";color:var(--muted)}
+.clist{display:grid;gap:8px}
+.crow{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
+.crow .ci{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:900;font-size:14px;background:var(--c1)}
+.crow .cn{font-weight:900;font-size:13px;line-height:1.3}.crow .cd{font-size:11.5px;color:var(--muted);line-height:1.4}
+.crow .cb{border:2px solid var(--ink);border-radius:999px;padding:1px 12px;font-size:12px;font-weight:900;background:var(--ink);color:var(--bg);white-space:nowrap}
+.crow .cb.ok{background:var(--c4);color:#fff;border-color:var(--c4)}
+.cmodal{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:4;padding:14px}
+.cmodal .mb{background:var(--bg);border:2px solid var(--ink);border-radius:14px;padding:14px;width:min(360px,100%);display:grid;gap:8px}
+.cmodal label{font-size:11.5px;font-weight:900;color:var(--muted)}
+.cmodal .fi{border:1.5px solid var(--line);border-radius:8px;padding:5px 10px;font-size:12px;min-height:30px;font-family:var(--mono);word-break:break-all}
+.cmodal .ma{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.cmodal .ma span{border:2px solid var(--ink);border-radius:999px;padding:1px 14px;font-size:12px;font-weight:900}
+.cmodal .ma .go{background:var(--ink);color:var(--bg)}
+.auth{min-height:300px;display:grid;place-items:center;padding:18px;background:var(--surface)}
+.auth .ab{background:var(--bg);border:2px solid var(--ink);border-radius:16px;padding:18px;width:min(340px,100%);display:grid;gap:10px;text-align:center}
+.auth .ai{display:flex;justify-content:center;gap:10px;align-items:center;font-family:var(--mono);color:var(--muted)}
+.auth .ai i{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff;font-style:normal;font-weight:900;background:var(--c1);font-family:var(--body)}
+.auth .ai i.cl{background:var(--claude)}
+.auth ul{margin:0;padding:0;list-style:none;font-size:12.5px;text-align:left;display:grid;gap:4px}
+.auth li::before{content:"✓ ";color:var(--c4);font-weight:900}
+.auth .aa{display:flex;gap:8px;justify-content:center}
+.auth .aa span{border:2px solid var(--ink);border-radius:999px;padding:3px 16px;font-size:12.5px;font-weight:900}
+.auth .aa .go{background:var(--c4);color:#fff}
+.chatw{position:relative}
+.irow{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:end;padding:0 12px 12px}
+.pplus{border:2px solid var(--ink);border-radius:10px;width:36px;height:40px;display:grid;place-items:center;font-weight:900;background:var(--bg)}
+.ppop{position:absolute;left:12px;bottom:60px;border:2px solid var(--ink);border-radius:12px;background:var(--bg);padding:8px 10px;font-size:12.5px;display:none;z-index:3;min-width:210px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.ppop b{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.ppop .pr{display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:900;padding:3px 0}
+.ppop .sw{width:34px;height:18px;border-radius:9px;background:var(--c4);position:relative;flex:none}.ppop .sw::after{content:"";position:absolute;right:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+.rcard{margin-top:6px;width:190px;border-radius:8px;border:2px solid var(--ink);overflow:hidden;background:var(--bg)}
+.rcard .rt{aspect-ratio:16/9;background:linear-gradient(135deg,var(--c1),var(--c5));display:grid;place-items:center;color:#fff;font-weight:900;font-size:12px}
+.rcard .rb{padding:4px 8px;font-size:11px;font-family:var(--mono)}
+/* recipes */
+.rcp{display:grid;gap:22px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chain a{border:2px solid var(--ink);border-radius:999px;padding:2px 12px;font-size:13px;font-weight:900;text-decoration:none;color:var(--ink);background:var(--bg);animation:pls 4s ease-in-out infinite}
+.chain a:nth-of-type(2){animation-delay:.8s}.chain a:nth-of-type(3){animation-delay:1.6s}.chain a:nth-of-type(4){animation-delay:2.4s}
+.chain i{font-style:normal;font-family:var(--display)}
+@keyframes pls{0%,20%,100%{background:var(--bg);color:var(--ink)}8%{background:var(--c3);color:#0c0d12}}
+.flow5{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;gap:8px;align-items:stretch;margin-top:8px}
+.flow5 .n{border:2px solid var(--ink);border-radius:12px;padding:12px 8px;text-align:center;font-weight:900;font-size:13.5px;line-height:1.5;background:var(--bg);display:grid;place-items:center}
+.flow5 .n small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
+.flow5 .n.k{background:var(--c3);color:#0c0d12}.flow5 .n.k small{color:#3a3f4a}
+.flow5 .ar{display:grid;place-items:center;font-family:var(--display)}
+@media (max-width:860px){.rcp{grid-template-columns:1fr}.tabs.t3{grid-template-columns:1fr}.cs{grid-template-columns:92px 1fr}.flow5{grid-template-columns:1fr}.flow5 .ar{transform:rotate(90deg)}}
+
+.card[data-cat="edit"]{--k:var(--c3)}.card[data-cat="edit"] .ico,.card[data-cat="edit"] .catp{color:#0c0d12}.card[data-cat="sns"]{--k:var(--c1)}.card[data-cat="ops"]{--k:var(--c4)}.card[data-cat="ai"]{--k:var(--ink)}.card[data-cat="ai"] .ico,.card[data-cat="ai"] .catp{color:var(--bg)}
+.gl{display:grid;gap:16px}
+.glc{border:2px solid var(--ink);border-radius:16px;overflow:hidden;background:var(--bg);box-shadow:var(--sh)}
+.glh{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:10px 16px;border-bottom:2px solid var(--ink);background:var(--surface)}
+.glh b{font-family:var(--display);font-weight:400;font-size:20px;border-left:10px solid var(--k);padding-left:10px}
+.glh span{font-weight:700;font-size:14.5px}
+.glb{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:0}
+.glb>div{padding:12px 16px;border-left:1px solid var(--line)}.glb>div:first-child{border-left:0}
+.glb i{font-style:normal;font-size:11.5px;font-weight:900;color:var(--muted);display:block;margin-bottom:2px}
+.glb p{font-size:14.5px;line-height:1.75}
+.glb code{font-family:var(--mono);font-size:12px;background:var(--surface);padding:1px 5px;border-radius:4px;word-break:break-all}
+.pbtn{text-align:left;cursor:pointer;font:inherit;color:inherit;width:100%;transition:transform .12s}
+.pbtn:hover{transform:translate(-2px,-2px)}
+.pbtn .more{display:inline-block;margin-top:4px;font-size:13px;font-weight:900;background:var(--c2);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:2px 12px;justify-self:start}
+.pricep{margin-top:26px;border:2px solid var(--ink);border-radius:20px;padding:22px;background:var(--bg);box-shadow:var(--sh)}
+.pricep h3{font-size:19px}
+.sim{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px;align-items:start}
+.simf{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:2px solid var(--ink);border-radius:14px;padding:14px;background:var(--surface)}
+.simf label{display:grid;gap:3px;font-size:12.5px;font-weight:900}
+.simf select,.simf input{font:inherit;font-weight:500;padding:7px 8px;border:2px solid var(--ink);border-radius:8px;background:var(--bg);color:var(--ink);width:100%;font-size:13.5px}
+.simp{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.simp b{font-size:12.5px;margin-right:4px}
+.simo{border:2px solid var(--ink);border-radius:14px;padding:14px;background:var(--bg);position:sticky;top:66px}
+.simt{display:grid;gap:0;background:var(--c3);color:#0c0d12;border:2px solid var(--ink);border-radius:12px;padding:10px 14px}
+.simt span{font-size:12.5px;font-weight:900}.simt b{font-family:var(--display);font-weight:400;font-size:32px;line-height:1.2;font-variant-numeric:tabular-nums}.simt i{font-style:normal;font-size:12px}
+.simr,.simn{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:13.5px}
+.simr li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:3px}
+.simn li::before{content:"▶ ";color:var(--c1)}
+.sum{border:2px solid var(--ink);border-radius:16px;padding:16px 18px;background:var(--surface);display:grid;gap:6px;margin-top:22px}
+.sum ol{margin:0;padding-left:1.3em;font-size:15px;font-weight:700;display:grid;gap:2px}
+.totop{position:fixed;right:16px;bottom:16px;z-index:40;border:2px solid var(--ink);background:var(--c3);color:#0c0d12;border-radius:999px;width:46px;height:46px;font-weight:900;font-size:18px;box-shadow:3px 3px 0 var(--ink)}
+.costp{font-size:11.5px;font-weight:900;padding:1px 9px;border-radius:999px;border:2px dashed var(--ink);line-height:1.7;background:var(--bg)}
+.lv{font-size:11.5px;font-weight:900;padding:1px 9px;border-radius:999px;line-height:1.7;color:#fff;border:2px solid var(--ink)}
+.lv.e1{background:var(--c4)}.lv.e2{background:var(--c1)}.lv.e3{background:var(--c5)}
+@media (max-width:860px){.glb{grid-template-columns:1fr}.glb>div{border-left:0;border-top:1px solid var(--line)}.glb>div:first-child{border-top:0}.sim,.simf{grid-template-columns:1fr}.simo{position:static}.pricep{padding:16px}}
+.cpy{margin-top:22px;border:2px solid var(--ink);border-radius:14px;padding:14px 18px;background:var(--bg);font-size:16px;line-height:1.8;display:grid;gap:2px}.cpy a{font-weight:900}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#top">Claude連携アプリ図鑑</a>
+  <nav aria-label="ページ内メニュー">
+    <a href="#kiso">基礎</a><a href="#ryokin">料金</a><a href="#chigai">違い</a><a href="#irekata">つなぎ方</a><a href="#zukan">図鑑</a><a href="#recipe">組み合わせ</a><a href="#shindan">診断</a><a href="#check">チェック</a><a href="#sns">SNSの注意</a><a href="#qa">Q&amp;A</a>
+  </nav>
+  <button class="theme" id="themeBtn" type="button" aria-label="背景の色を切り替える">黒にする</button>
+</div></header>
+
+<main id="top">
+<section class="hero"><div class="wrap hero-grid">
+  <div>
+    <span class="stk">つなぐと作れるものが増える21アプリ</span>
+    <h1 style="margin-top:14px">Claude<br><em>連携アプリ図鑑</em></h1>
+    <p class="sub">動画生成、音楽、アバター、声、画像、SNS投稿。Claudeにつなぐだけで、チャットから作れるものが一気に増えます。つなぎ方は実演つき。</p>
+    <div class="cta">
+      <a class="btn pri" href="#irekata">つなぎ方の実演を見る</a>
+      <a class="btn yl" href="#zukan">21アプリの図鑑へ</a>
+      <a class="btn" href="#kiso">コネクタって何？から</a>
+    </div>
+  </div>
+  <canvas class="heroCv" data-pv="hero" aria-hidden="true"></canvas>
+</div></section>
+<div class="mq" aria-hidden="true"><div id="mq"></div></div>
+<div class="wrap"><div class="cpy"><p>このサイトの著作権はレオに属します。</p><p>レオのアカウントは<a href="https://www.threads.com/@nft_web3_reo" target="_blank" rel="noopener">こちら</a></p><p>複製、転載、その他コピーして配布することを禁じます。</p></div></div>
+<div class="wrap"><div class="sum"><b>先に結論だけ</b><ol><li>つなぐ作業は無料。お金がかかるのは、つないだアプリの月額とクレジット</li><li>つなぎ方は「一覧から選ぶ」「URLを貼る」「Claude Codeに貼る」の3通り</li><li>最初の1つは、すでに使っているアプリから。迷ったらCanvaかSuno</li></ol></div></div>
+
+<section id="kiso"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk b">STEP 1　基礎</span>
+    <h2>コネクタとMCP。言葉は5つだけ</h2>
+    <p class="lead">「Googleでログイン」を押したことがあれば、同じ感覚でつなげます。</p>
+  </div>
+  <div class="gl">
+    <article class="glc" style="--k:var(--c1)">
+      <div class="glh"><b>コネクタ</b><span>Claudeとアプリをつなぐ接続口</span></div>
+      <div class="glb">
+        <div><i>くわしく</i><p>Claudeは本来、文章で答えるだけのAI。コネクタを足すと、Canvaでデザインを作る、Higgsfieldで動画を生成する、といったアプリの中の作業まで代わりに進めてくれます。ChatGPTの「アプリ連携」と同じ役割です。</p></div>
+        <div><i>具体例</i><p>Canvaのコネクタをつなぐ →「告知画像を作って」と頼む → 自分のCanvaアカウントにデザインができあがる。</p></div>
+        <div><i>よくある勘違い</i><p>つないでもClaudeの頭が良くなるわけではありません。変わるのは、使える道具の数。<b>コネクタを追加すること自体は無料</b>です。</p></div>
+      </div>
+    </article>
+    <article class="glc" style="--k:var(--c2)">
+      <div class="glh"><b>MCP</b><span>AIとアプリをつなぐ共通規格</span></div>
+      <div class="glb">
+        <div><i>くわしく</i><p>以前は、AIごと・アプリごとに別々のつなぎ方が必要でした。MCPという共通の決まりができたことで、対応アプリは同じ手順でClaudeにもChatGPTにもつながるようになりました。</p></div>
+        <div><i>具体例</i><p>Sunoは接続用のURLを1つだけ公開。同じURLを、Claude、ChatGPT、Geminiのどれに貼ってもつながります。</p></div>
+        <div><i>よくある勘違い</i><p>MCPはアプリの名前や商品名ではありません。「HiggsfieldのMCP」は「HiggsfieldがMCPに対応して用意した接続口」という意味。<b>規格そのものは無料</b>で使えます。</p></div>
+      </div>
+    </article>
+    <article class="glc" style="--k:var(--c5)">
+      <div class="glh"><b>カスタムコネクタ</b><span>URLを貼って自分で足す接続</span></div>
+      <div class="glb">
+        <div><i>くわしく</i><p>Claudeには、あらかじめ用意されたコネクタの一覧があります。そこに載っていないアプリは、アプリ側が公開している接続用URLを自分で貼って追加します。これがカスタムコネクタ。</p></div>
+        <div><i>具体例</i><p>Higgsfieldなら、名前に「Higgsfield」、URL欄に <code>https://mcp.higgsfield.ai/mcp</code> を貼って「追加」。</p></div>
+        <div><i>気をつける点</i><p>一覧のコネクタと違い、Anthropicが中身を確認していない接続先です。URLは必ず各アプリの公式サイトから取ること。<b>無料プランのClaudeでは1つまで</b>。</p></div>
+      </div>
+    </article>
+    <article class="glc" style="--k:var(--c4)">
+      <div class="glh"><b>認証</b><span>ログインして、使ってよい範囲を許可する手続き</span></div>
+      <div class="glb">
+        <div><i>くわしく</i><p>つなぐ途中で、アプリ側のログイン画面が開き「Claudeにここまで許可しますか」と聞かれます。「Googleでログイン」と同じ仕組みで、パスワードがClaudeに渡ることはありません。</p></div>
+        <div><i>具体例</i><p>Canvaをつなぐ → Canvaのログイン画面が開く → 「許可する」を押す → Claudeの画面に戻って完了。APIキーの発行は不要。</p></div>
+        <div><i>よくある勘違い</i><p>一度許可したら取り消せない、は誤解です。Claudeの設定からも、アプリ側の設定からも、いつでも切断できます。</p></div>
+      </div>
+    </article>
+    <article class="glc" style="--k:var(--c3)">
+      <div class="glh"><b>クレジット</b><span>アプリ側の利用ポイント</span></div>
+      <div class="glb">
+        <div><i>くわしく</i><p>動画や音楽の生成AIは、月額プランに「クレジット」という持ち点が付き、作るたびに減っていく仕組みです。Claude経由で作っても、減るのはアプリ側の持ち点。</p></div>
+        <div><i>具体例</i><p>Runwayは動画1秒で12クレジット。10秒の動画1本で120クレジット。月625クレジットのプランなら、10秒動画が約5本。</p></div>
+        <div><i>よくある勘違い</i><p>Claudeの有料プランに入れば作り放題、は誤解です。<b>Claudeの料金と、アプリの料金は別</b>。作り直した分もクレジットは減ります。</p></div>
+      </div>
+    </article>
+  </div>
+
+  <div class="box" style="margin-top:26px">
+    <h3>つなぐと、頼んだ内容はこう流れる</h3>
+    <div class="flow5">
+      <div class="n">あなた<small>チャットで頼む</small></div><div class="ar">→</div>
+      <div class="n">Claude<small>どのアプリを使うか判断</small></div><div class="ar">→</div>
+      <div class="n k">コネクタ<small>MCPで橋渡し</small></div><div class="ar">→</div>
+      <div class="n">アプリ<small>動画や画像を作って返す</small></div>
+    </div>
+    <div class="say" style="margin-top:6px">自分でアプリを開く必要なし。結果はチャットに戻ってきて、アプリ側にも保存されます。</div>
+  </div>
+
+  <div class="g3" style="margin-top:26px">
+    <div class="box sh"><div class="big" style="color:var(--c1)">1<small> つまで</small></div><h3>無料プランのカスタムコネクタ</h3><p class="small">URLを貼って足す方法は、Claudeの無料プランだと1つまで。一覧から選ぶ方法は別枠です。</p></div>
+    <button class="box sh pbtn" type="button" id="priceBtn" aria-expanded="false" aria-controls="pricePanel"><div class="big" style="color:var(--c2)">別<small> 料金</small></div><h3>生成はアプリ側のクレジット</h3><p class="small">Higgsfield、Runway、Kling、Sunoなどは、作るたびに各アプリのクレジットを消費。有料プランが必要なものもあります。</p><span class="more" id="priceMore">タップで料金をくわしく見る ▼</span></button>
+    <div class="box sh"><div class="big" style="color:var(--c4)">PC<small> で追加</small></div><h3>追加はパソコンから</h3><p class="small">スマホアプリからは新しいコネクタを追加できません。パソコンで一度つなげば、スマホでも使えます。</p></div>
+  </div>
+  <div class="pricep" id="pricePanel" hidden>
+    <div class="sec-head" style="margin-bottom:18px"><span class="stk r">料金</span><h2>結局いくらかかる？ 無料でどこまでできる？</h2>
+      <p class="lead">金額は2026年11月時点の公開情報にもとづく目安で、月払い・税別・米ドル建て。プランは頻繁に変わるため、契約前に各社の料金ページを確認してください。</p></div>
+
+    <h3>お金がかかる場所は3つ</h3>
+    <div class="g3" style="margin:10px 0 24px">
+      <div class="box fill"><b style="color:var(--c1)">① Claude本体</b><p class="small">無料プランあり。Pro 月20ドル、Max 月100ドル。Claude CodeはPro以上で使えます。</p></div>
+      <div class="box fill"><b style="color:var(--c4)">② つなぐ作業</b><p class="small">コネクタの追加もMCPも無料。接続そのものに料金はかかりません。</p></div>
+      <div class="box fill"><b style="color:var(--c2)">③ つないだアプリ</b><p class="small">ここが本体。各アプリの月額プランと、作るたびに減るクレジット。XやGeminiは使った分だけ払う方式。</p></div>
+    </div>
+
+    <h3>0円でできること、できないこと</h3>
+    <div class="g2" style="margin:10px 0 24px">
+      <div class="box"><b style="color:var(--c4)">0円でできる</b><ul style="margin:0;padding-left:1.2em;font-size:14.5px">
+        <li>無料プランのClaudeでも、コネクタは使える</li>
+        <li>Suno 無料プランのまま接続可。1日50クレジット、約10曲分（商用は不可）</li>
+        <li>ElevenLabs 無料枠は月1万クレジット、読み上げ約10分（商用は不可）</li>
+        <li>Kling 無料で毎日66クレジット。Krea 日ごとの無料枠あり</li>
+      </ul></div>
+      <div class="box"><b style="color:var(--c2)">0円ではできない</b><ul style="margin:0;padding-left:1.2em;font-size:14.5px">
+        <li>無料プランのClaudeは、URLを貼る方式を1つまでしか足せない</li>
+        <li>Higgsfield 有料プランが必須</li>
+        <li>HeyGen Claudeの有料プランが必要</li>
+        <li>X公式MCP、Codex、Gemini Claude Code（Pro以上）が必要</li>
+        <li>作ったものを収益化に使うなら、SunoもElevenLabsも有料プランが前提</li>
+      </ul></div>
+    </div>
+
+    <h3>アプリごとの料金と、作れる量の目安</h3>
+    <div class="scroll" style="margin:10px 0 24px">
+    <table class="t">
+      <thead><tr><th>アプリ</th><th>無料</th><th>最初の有料プラン</th><th>その上</th><th>作れる量の目安</th></tr></thead>
+      <tbody>
+        <tr><td><b>Higgsfield</b></td><td>接続には不可</td><td>Basic 9ドル<br><span class="small">120クレジット</span></td><td>Pro 29ドル<br><span class="small">600クレジット</span></td><td>Basicで、速い動画モデルなら約7本、または画像約60枚</td></tr>
+        <tr><td><b>Runway</b></td><td>お試し125クレジット</td><td>Pro 35ドル<br><span class="small">2,250クレジット</span></td><td>Max 95ドル<br><span class="small">9,500クレジット</span></td><td>Proで、Gen-4.5の動画が合計約187秒。10秒なら約18本</td></tr>
+        <tr><td><b>Kling</b></td><td>毎日66クレジット</td><td>Standard 約10ドル<br><span class="small">660クレジット</span></td><td>Pro 約37ドル<br><span class="small">3,000クレジット</span></td><td>Standardで、10秒・1080pの動画が約8本</td></tr>
+        <tr><td><b>Suno</b></td><td>1日50クレジット<br><span class="small">商用不可</span></td><td>Pro 10ドル<br><span class="small">2,500クレジット</span></td><td>Premier 30ドル<br><span class="small">10,000クレジット</span></td><td>Proで約500曲を生成。ダウンロードは月20曲まで</td></tr>
+        <tr><td><b>HeyGen</b></td><td>月3本・1分まで<br><span class="small">透かし入り</span></td><td>Creator 29ドル<br><span class="small">600クレジット</span></td><td>Pro 49ドル<br><span class="small">1,000クレジット</span></td><td>使うアバターの種類で大きく変動。1分あたり約0.2〜2.3ドル相当</td></tr>
+        <tr><td><b>ElevenLabs</b></td><td>月1万クレジット<br><span class="small">商用不可</span></td><td>Starter 6ドル<br><span class="small">3万クレジット</span></td><td>Creator 22ドル<br><span class="small">12.1万クレジット</span></td><td>Starterで読み上げ約30分、Creatorで約2時間</td></tr>
+        <tr><td><b>X公式MCP</b></td><td>なし</td><td colspan="2">使った分だけ。投稿1件0.015ドル、リンク付きは0.20ドル、読み取り1件0.005ドル</td><td>リンクなしで月30投稿なら約0.45ドル</td></tr>
+        <tr><td><b>Gemini画像</b></td><td>なし</td><td colspan="2">使った分だけ。画像1枚 約0.034〜0.13ドル</td><td>月30枚で約1〜4ドル</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="small" style="margin:-14px 0 24px">Runwayの接続はPro以上が対象です。Higgsfieldは、見る時期によって表示されるプランが違うという報告があります。Canva、Notion、Gammaなどは接続に追加料金はなく、各アプリのプランに応じた機能が使えます。</p>
+
+    <h3>料金シミュレーション</h3>
+    <div class="sim">
+      <div class="simf" id="simForm"></div>
+      <div class="simo" id="simOut" aria-live="polite"></div>
+    </div>
+
+    <h3 style="margin-top:24px">出費を抑えるコツ</h3>
+    <ul style="margin:8px 0 0;padding-left:1.2em;font-size:15px">
+      <li>最初の1か月は、動画系を1つだけ契約する。慣れてから増やす</li>
+      <li>年払いは安いが、乗り換えにくい。月払いで1〜2か月試してから</li>
+      <li>試作は安いモデルや短い秒数で。本番の1本だけ高品質にする</li>
+      <li>使い切れなかったクレジットは、翌月に持ち越せないプランが多い</li>
+      <li>生成の前に「これは何クレジット使う？」とClaudeに確認させる</li>
+    </ul>
+  </div>
+</div></section>
+
+<section id="chigai" style="background:var(--surface);border-block:2px solid var(--ink)"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk r">STEP 2　違い</span>
+    <h2>つなぐ前と後で、作業はこう変わる</h2>
+    <p class="lead">やることは同じでも、行き来の回数がまるで違います。</p>
+  </div>
+  <div class="cmp">
+    <div>
+      <div class="cvw"><span class="lab">つなぐ前</span><canvas data-pv="cmpA" aria-hidden="true"></canvas></div>
+      <p class="small" style="margin-top:10px">Claudeで文章を作り、コピーして各アプリを開き、貼り付けて、書き出して、また次のアプリへ。</p>
+    </div>
+    <div>
+      <div class="cvw on"><span class="lab">つないだ後</span><canvas data-pv="cmpB" aria-hidden="true"></canvas></div>
+      <p class="small" style="margin-top:10px">チャットで一度頼むだけ。Claudeが各アプリを順番に動かし、結果がチャットに戻ります。</p>
+    </div>
+  </div>
+  <p class="small" style="margin-top:10px">上の2つは違いを伝えるためのイメージです。</p>
+  <div class="scroll box" style="margin-top:24px">
+  <table class="t">
+    <thead><tr><th>やりたいこと</th><th>つなぐ前</th><th>つないだ後</th></tr></thead>
+    <tbody>
+      <tr><td><b>リール用の動画</b></td><td>台本をコピーして動画AIのサイトで生成</td><td>「この台本で動画を作って」で生成まで完了</td></tr>
+      <tr><td><b>サムネや投稿画像</b></td><td>デザインアプリを開いて一から配置</td><td>文面を渡すとデザインが作られ、書き出しまで</td></tr>
+      <tr><td><b>SNSへの投稿</b></td><td>文章と画像を1本ずつ貼り付けて投稿</td><td>下書きを作らせ、確認してそのまま投稿</td></tr>
+      <tr><td><b>BGM</b></td><td>音楽AIのサイトで作って、ダウンロード</td><td>「この動画に合うBGMを作って」で作曲</td></tr>
+      <tr><td><b>ネタの管理</b></td><td>メモアプリとチャットを行き来</td><td>Claudeがネタ帳を直接読み書き</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div></section>
+
+<section id="irekata"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk g">STEP 3　つなぎ方</span>
+    <h2>方法を選ぶと、手順がその場で動き出す</h2>
+    <p class="lead">つなぎ方は3通り。デザイン系は方法1、話題の動画・音楽・音声系は方法2、XやCodexは方法3です。画面は流れを伝えるイメージで、実物とは見た目が異なります。</p>
+  </div>
+  <div class="tabs t3" role="tablist" id="demoTabs"></div>
+  <div class="exs" id="exs"></div>
+  <div class="demo">
+    <ol class="steps" id="stepList"></ol>
+    <div class="player">
+      <div class="pbar">
+        <button class="btn sm pri" type="button" id="playB">▶ 再生</button>
+        <button class="btn sm" type="button" id="prevB">← 前へ</button>
+        <button class="btn sm" type="button" id="nextB">次へ →</button>
+        <span class="stepno" id="stepNo">1 / 6</span>
+      </div>
+      <div class="capt"><b id="capNo">1</b><span id="capt"></span></div>
+      <div class="stage" id="stage">
+        <div class="scr" id="scrSet"><div class="win"><div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">Claude の設定画面（イメージ）</span></div>
+          <div class="cs">
+            <div class="side"><div>新しいチャット</div><div>プロジェクト</div><div id="sNavC">カスタマイズ</div><div id="sNavK" class="act">└ コネクタ</div><div>└ スキル</div></div>
+            <div class="main">
+              <div class="mh"><b>コネクタ</b><span class="cbtn" id="cAdd">＋ 追加</span></div>
+              <div class="cmenu" id="cMenu"><div>コネクタを探す</div><div id="cCustom">カスタムコネクタを追加</div></div>
+              <div class="csearch" id="cSearch"></div>
+              <div class="clist" id="cList"></div>
+            </div>
+            <div class="cmodal" id="cModal"><div class="mb"><b>カスタムコネクタを追加</b><label>名前</label><div class="fi" id="mName"></div><label>リモートMCPサーバーURL</label><div class="fi" id="mUrl"></div><div class="ma"><span>キャンセル</span><span class="go" id="mAdd">追加</span></div></div></div>
+          </div></div></div>
+        <div class="scr" id="scrAuth"><div class="win"><div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url" id="aTitle">アプリ側の許可画面（イメージ）</span></div>
+          <div class="auth"><div class="ab"><div class="ai"><i class="cl">C</i>⇄<i id="aIco">A</i></div><b id="aHead"></b><ul><li>あなたのアカウントの内容を読む</li><li>あなたの代わりに作成・編集する</li></ul><div class="aa"><span>キャンセル</span><span class="go" id="aOk">許可する</span></div></div></div></div></div>
+        <div class="scr" id="scrChat"><div class="win chatw"><div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url" id="chatTitle">Claude のチャット（イメージ）</span></div><div class="chat" id="chatLog"></div>
+          <div class="ppop" id="pPop"><b>コネクタ</b><div class="pr"><span id="pName">App</span><span class="sw" id="pTog"></span></div></div>
+          <div class="irow"><div class="pplus" id="pPlus">＋</div><div class="inp" id="chatIn"></div></div></div></div>
+        <div class="scr" id="scrTerm"><div class="win"><div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url" id="termTitle">ターミナル</span></div><div class="termw" id="termOut"></div></div></div>
+        <div class="cursor" id="cur" aria-hidden="true"></div>
+      </div>
+      <div class="ptip"><b>ポイント</b>　<span id="tip"></span></div>
+    </div>
+  </div>
+  <p class="small" id="demoNote" style="margin-top:12px"></p>
+  <div class="g2" style="margin-top:24px">
+    <div class="box fill">
+      <h3>つなぐ前の安全チェック</h3>
+      <ul style="margin:0;padding-left:1.2em">
+        <li>URLは各アプリの公式サイトに載っているものだけを使う</li>
+        <li>許可画面では、何を許可するのかを読んでから進む</li>
+        <li>投稿、送信、決済のような取り消せない操作は、実行前にClaudeに確認させる</li>
+      </ul>
+    </div>
+    <div class="box fill">
+      <h3>やめたい時</h3>
+      <ul style="margin:0;padding-left:1.2em">
+        <li>Claudeのコネクタ設定から、いつでも切断できる</li>
+        <li>アプリ側の連携設定からも、許可を取り消せる</li>
+        <li>使わないコネクタは、チャットごとにオフにしておくと誤作動を防げる</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<section id="zukan" style="background:var(--surface);border-block:2px solid var(--ink)"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk v">STEP 4　図鑑</span>
+    <h2>発信に効く、厳選21アプリ</h2>
+    <p class="lead">つなぐと作れるものが増えるアプリと、発信に直結するアプリだけに絞りました。公式の接続口がないものは、その旨をカードに明記しています。動く見本は、できることを表したイメージです。</p>
+  </div>
+  <div class="scroll box" style="margin-bottom:22px">
+  <h3 style="margin-bottom:6px">作る系7つの早見表</h3>
+  <table class="t">
+    <thead><tr><th>アプリ</th><th>得意なこと</th><th>費用のかかり方</th><th>つなぎ方</th></tr></thead>
+    <tbody>
+      <tr><td><b>Higgsfield</b></td><td>動画と画像。30以上のモデルを使い分け</td><td>有料プラン必須＋クレジット</td><td>URLを貼る</td></tr>
+      <tr><td><b>Runway</b></td><td>質感の高い映像。声や効果音も</td><td>Runwayのプランとクレジット</td><td>URLを貼る</td></tr>
+      <tr><td><b>Kling</b></td><td>人物の動きが自然な動画</td><td>いつものKlingの契約をそのまま共有</td><td>URLを貼る</td></tr>
+      <tr><td><b>Suno</b></td><td>BGMや歌</td><td>Sunoプランのクレジット</td><td>URLを貼る</td></tr>
+      <tr><td><b>HeyGen</b></td><td>アバターが話す動画、翻訳</td><td>Claude有料プラン＋HeyGenのクレジット</td><td>URLを貼る</td></tr>
+      <tr><td><b>ElevenLabs</b></td><td>ナレーション音声</td><td>ElevenLabsのクレジット</td><td>URLを貼る</td></tr>
+      <tr><td><b>Krea</b></td><td>同じ画風の画像を量産</td><td>無料の日ごとの枠あり</td><td>一覧から選ぶ</td></tr>
+    </tbody>
+  </table>
+  <p class="small" style="margin-top:8px">無料プランのClaudeは、URLを貼る方式を1つまでしか追加できません。まず1つ選ぶなら、手持ちの契約があるアプリから。</p>
+  </div>
+  <div class="filters" id="filters" role="group" aria-label="絞り込み"></div>
+  <div class="cards" id="cards"></div>
+  <p class="small" id="noHit" hidden>条件に合うものがありません。</p>
+</div></section>
+
+<section id="recipe"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk">組み合わせ</span>
+    <h2>1回頼むだけで、ここまで終わる</h2>
+    <p class="lead">アプリを2つ以上つないでおくと、作業をまとめて頼めます。下の文をコピーして、そのまま送るだけ。</p>
+  </div>
+  <div class="rcp" id="rcp"></div>
+</div></section>
+
+<section id="shindan" style="background:var(--surface);border-block:2px solid var(--ink)"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk b">診断</span>
+    <h2>やりたいことから、最初の3つを選ぶ</h2>
+  </div>
+  <div class="g2">
+    <div class="box"><div class="q"><b>いちばんやりたいことは？</b><div class="opts" id="qGoal"></div></div></div>
+    <div class="res" id="pickRes" aria-live="polite"></div>
+  </div>
+</div></section>
+
+<section id="check"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk g">チェックリスト</span>
+    <h2>はじめての連携までの5手順</h2>
+    <p class="small">チェックはこの端末のブラウザに保存されます。</p>
+  </div>
+  <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+  <p class="small" id="progTxt" style="margin:6px 0 14px"></p>
+  <ul class="todo" id="todo"></ul>
+</div></section>
+
+<section id="sns"><div class="wrap">
+  <div class="sec-head">
+    <span class="stk r">SNS連携の注意</span>
+    <h2>InstagramとThreadsにつなぐ前に</h2>
+    <p class="lead">投稿まで任せられるのは便利ですが、アカウントを守るための決まりがあります。つなぐ前に一度だけ読んでください。</p>
+  </div>
+  <div class="g2">
+    <div class="box"><h3>1　公式のコネクタは、まだない</h3><p>Meta公式のClaude用コネクタはありません。つなぐ場合は、Metaの公式APIを使う外部サービスを経由します。自分のアカウントの操作権を、その会社に預ける形になります。</p><ul style="margin:0;padding-left:1.2em;font-size:14.5px"><li>運営元と料金、解約方法を先に確認</li><li>使わなくなったら、Instagram・Threads側の設定からも連携を解除</li></ul></div>
+    <div class="box"><h3>2　パスワードを預ける道具は使わない</h3><p>公式APIを通さず、IDとパスワードを入力させるツールや、裏でブラウザを自動操作するツールは、規約違反として制限や凍結の対象になり得ます。「公式API対応」と明記されたサービスだけを選ぶのが安全です。</p></div>
+    <div class="box"><h3>3　やってはいけない自動化</h3><p>自動いいね、自動フォロー、自動コメント、DMの一斉送信。Metaが禁止している代表的な行為で、検知されると操作の制限やアカウント停止につながります。Claudeに任せるのは「自分の投稿を作って出す」までに。</p></div>
+    <div class="box"><h3>4　投稿数には上限がある</h3><p>公式API経由の投稿は、Instagramが24時間で100件（資料によっては50件）、Threadsが24時間で250件、返信は1,000件まで。上限の内側でも、短い間隔での連続投稿はスパムと判定されることがあります。</p><ul style="margin:0;padding-left:1.2em;font-size:14.5px"><li>投稿の間隔は数分以上あける</li><li>同じ文面を使い回さない</li></ul></div>
+    <div class="box"><h3>5　AIで作ったものは、そう分かるように</h3><p>Instagramでは、本物そっくりのAI動画や、実在の声のように聞こえる音声を投稿する際、AIで作ったことの開示が求められます。怠るとペナルティの対象になる場合があります。画像に開示の義務はありませんが、Meta側が検出すると「AI情報」のラベルが自動で付きます。ラベルを隠すための加工は規約違反です。</p></div>
+    <div class="box"><h3>6　新しいアカウントほど慎重に</h3><p>開設して日が浅いアカウントは、自動的な動きが検知されやすいと言われています。最初の数週間は手動の投稿を中心にして、連携は下書きづくりから始めるのが無難です。</p></div>
+    <div class="box"><h3>7　投稿前の確認は残す</h3><p>投稿できるAIは、間違った内容も投稿できてしまいます。「投稿前に必ず内容を見せて」と指示に入れ、承認の一手間は省かないでください。予約投稿は、チャットを閉じても外部サービス側で実行される点にも注意。</p></div>
+    <div class="box"><h3>8　制限がかかった時</h3><p>「後でもう一度お試しください」のような表示が出たら、操作を止めて1〜2日待つのが基本です。連携ツールも一時停止を。投稿が見られなくなった、ログインできない、という場合は、アプリ内の案内から異議申し立てを行います。</p></div>
+  </div>
+  <div class="caution" style="margin-top:18px"><b>あわせて確認</b>　案件やアフィリエイトの投稿は、広告であることの表記が必要です。Sunoの曲やElevenLabsの音声を収益化に使う場合は、有料プランの商用利用の条件を確認してください。ここに書いたのは一般的な注意点で、規約は変わります。迷ったら各サービスの公式ヘルプを。</div>
+</div></section>
+
+<section id="qa" style="background:var(--surface);border-top:2px solid var(--ink)"><div class="wrap">
+  <div class="sec-head"><span class="stk r">Q&amp;A</span><h2>つまずきやすい所</h2></div>
+  <div class="faq">
+    <details><summary>MCPとコネクタは別物？</summary><p>MCPは規格の名前、コネクタはClaudeでの呼び名です。「HiggsfieldのMCPをつなぐ」と「Higgsfieldのコネクタを追加する」は同じ意味で使われています。</p></details>
+    <details><summary>無料プランでも使える？</summary><p>使えます。ただしURLを貼って追加するカスタムコネクタは、無料プランだと1つまで。HeyGenのように、Claudeの有料プランを前提にしているアプリもあります。</p></details>
+    <details><summary>つないだのにClaudeが使ってくれない</summary><p>チャット入力欄の＋からコネクタを開き、そのアプリがオンになっているか確認してください。指示の中でアプリ名を出すのも有効です。「Canvaで作って」のように書きます。</p></details>
+    <details><summary>メニューの名前が実演と違う</summary><p>Claudeの画面は更新が早く、「カスタマイズ」が「設定」と表示される場合があります。探す言葉は「コネクタ」。そこから「追加」「カスタムコネクタを追加」と進めば同じ場所に着きます。</p></details>
+    <details><summary>コネクタやMCPに、料金はかかる？</summary><p>つなぐこと自体は無料です。料金がかかるのは、Claude本体のプランと、つないだアプリの月額やクレジット。くわしい金額と試算は<a href="#ryokin">料金の解説</a>にまとめています。</p></details>
+    <details><summary>完全に0円で試せる組み合わせは？</summary><p>無料プランのClaudeに、Sunoを無料プランのままつなぐ方法があります。一覧から選べるCanvaなども、URL方式の1枠とは別に追加できます。ただしSunoの無料プランで作った曲は商用利用できません。</p></details>
+    <details><summary>勝手に投稿や決済をされない？</summary><p>コネクタの操作は、実行前に承認を求められる場面が多くあります。それでも、投稿・送信・返金のような操作は「実行前に必ず内容を見せて」と一言そえておくと安心です。</p></details>
+    <details><summary>X、Codex、GeminiはClaudeのチャットでもつなげる？</summary><p>この図鑑で「Claude Codeに貼る」と書いてあるものは、Claude Code専用です。自分のパソコンの中で動く仕組みのため、ブラウザ版やアプリ版のClaudeチャットからはつなげません。</p></details>
+    <details><summary>InstagramやThreadsに、公式のコネクタはある？</summary><p>2026年11月時点で、Meta公式のClaude用コネクタはありません。つなぐ場合は、Metaの公式APIを使った外部サービスを経由します。自分のアカウントの操作を外部サービスに許可することになるため、提供元と料金、規約を確認してから使ってください。</p></details>
+    <details><summary>noteに自動投稿して大丈夫？</summary><p>noteには外部から投稿するための公式の窓口がなく、出回っている方法はブラウザを自動操作する非公式のものです。規約に触れる可能性があり、突然動かなくなることもあります。使うなら下書き保存までにして、公開は自分の手で行うのが安全です。</p></details>
+    <details><summary>声やアバターの複製で気をつけることは？</summary><p>複製してよいのは、自分の声と顔、または本人の同意があるものだけです。他人の声や顔を無断で使うと、各アプリの規約違反になります。</p></details>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <p>最終確認 2026年11月17日。コネクタ一覧への掲載、接続用URL、料金や必要なプランは変わることがあります。つなぐ前に各アプリの公式ページを確認してください。画面の実演と動く見本はすべてイメージです。各アプリの名称は各社の商標で、このページは各社の公式ページではありません。</p>
+  <p style="margin-top:10px"><b>出典</b></p>
+  <ul>
+    <li><a href="https://support.claude.com/ja/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp" target="_blank" rel="noopener">リモートMCPを使用したカスタムコネクタを始める（Claude公式ヘルプ）</a></li>
+    <li><a href="https://higgsfield.ai/creator-hub/help-center/integrations/how-do-i-connect-higgsfield-to-ai-agent" target="_blank" rel="noopener">How to Connect Higgsfield to Claude or ChatGPT（Higgsfield公式）</a></li>
+    <li><a href="https://developers.heygen.com/mcp/claude-web" target="_blank" rel="noopener">Claude Web（HeyGen公式ドキュメント）</a></li>
+    <li><a href="https://elevenlabs.io/docs/eleven-api/resources/mcp-server" target="_blank" rel="noopener">ElevenLabs MCP server（ElevenLabs公式ドキュメント）</a></li>
+    <li><a href="https://fullvalue.co.jp/media/claude-pricing-plans/" target="_blank" rel="noopener">Claudeの料金プラン比較（2026年11月）</a></li>
+    <li><a href="https://www.versely.studio/blog/higgsfield-pricing-2026" target="_blank" rel="noopener">Higgsfield Pricing 2026</a></li>
+    <li><a href="https://justinmckelvey.com/blog/runway-pricing" target="_blank" rel="noopener">Runway Pricing (2026)</a></li>
+    <li><a href="https://shhots.ai/blog/kling-ai-pricing/" target="_blank" rel="noopener">Kling AI Pricing 2026</a></li>
+    <li><a href="https://costbench.com/software/ai-music-generators/suno/" target="_blank" rel="noopener">Suno Pricing 2026</a></li>
+    <li><a href="https://justinmckelvey.com/blog/heygen-pricing" target="_blank" rel="noopener">HeyGen Pricing (2026)</a></li>
+    <li><a href="https://www.cartesia.ai/learn/elevenlabs-pricing" target="_blank" rel="noopener">ElevenLabs pricing 2026</a></li>
+    <li><a href="https://www.socialync.io/blog/x-api-pricing-and-posting-2026" target="_blank" rel="noopener">X API Pricing 2026</a></li>
+    <li><a href="https://autoposting.ai/blog/posting-tools-terms-of-service" target="_blank" rel="noopener">Is a Posting Tool Against Instagram or X's Terms?（投稿数の上限）</a></li>
+    <li><a href="https://churaweb.net/sns/insta-ai/" target="_blank" rel="noopener">インスタのAIラベルが付く条件</a></li>
+    <li><a href="https://suno.com/mcp" target="_blank" rel="noopener">Add Suno to your AI stack（Suno公式）</a></li>
+    <li><a href="https://kling.ai/app/mcp/guide" target="_blank" rel="noopener">Kling MCP &amp; CLI Guide（Kling公式）</a></li>
+    <li><a href="https://budgetpixel.com/learn/best-mcp-servers-image-video" target="_blank" rel="noopener">The Best MCP Servers for AI Image and Video Generation in 2026（Runway、Krea）</a></li>
+    <li><a href="https://dev.classmethod.jp/articles/xmcp-claude-code-setup/" target="_blank" rel="noopener">X公式MCP「xmcp」セットアップ手順（DevelopersIO）</a></li>
+    <li><a href="https://note.com/nobu_0215/n/n30a4d2d00cc6" target="_blank" rel="noopener">Codex imagegenをClaudeから呼ぶ（note）</a></li>
+    <li><a href="https://sociality.io/blog/connect-instagram-to-claude/" target="_blank" rel="noopener">How to connect Instagram to Claude（公式コネクタの有無）</a></li>
+    <li><a href="https://github.com/ogmios2/claude-code-codex-mcp" target="_blank" rel="noopener">Codex MCP Server for Claude Code</a></li>
+    <li><a href="https://dev.classmethod.jp/articles/claude-code-codex-gemini-mcp/" target="_blank" rel="noopener">Claude CodeからCodex CLI・Gemini CLIを使えるようにする（DevelopersIO）</a></li>
+  </ul>
+</div></footer>
+<button class="totop" type="button" id="toTop" aria-label="ページの先頭へ戻る">↑</button>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+var toastT;
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("on")},1800)}
+function copyText(text){var done=function(){toast("コピーしました")},fail=function(){toast("コピーできませんでした。文字を選択してコピーしてください")};
+  try{navigator.clipboard.writeText(text).then(done,fail)}catch(e){fail()}}
+document.addEventListener("click",function(e){var b=e.target.closest("[data-copy]");if(b)copyText(b.getAttribute("data-copy"))});
+
+/* theme */
+var root=document.documentElement,themeBtn=$("#themeBtn"),C={};
+function readC(){var s=getComputedStyle(root),g=function(n){return s.getPropertyValue(n).trim()};
+  C={bg:g("--bg"),sur:g("--surface"),ink:g("--ink"),mut:g("--muted"),line:g("--line"),c1:g("--c1"),c2:g("--c2"),c3:g("--c3"),c4:g("--c4"),c5:g("--c5")};C.pal=[C.c1,C.c2,C.c3,C.c4,C.c5]}
+function isDark(){var t=root.getAttribute("data-theme");if(t)return t==="dark";return window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches}
+function paintTheme(){themeBtn.textContent=isDark()?"白にする":"黒にする";readC();drawAllOnce()}
+var saved=store("avz-theme");if(saved==="dark"||saved==="light")root.setAttribute("data-theme",saved);
+themeBtn.addEventListener("click",function(){var n=isDark()?"light":"dark";root.setAttribute("data-theme",n);store("avz-theme",n);paintTheme()});
+
+/* canvas helpers */
+function cl(x){return x<0?0:x>1?1:x}
+function seg(t,a,b){return cl((t-a)/(b-a))}
+var E={out:function(t){return 1-Math.pow(1-t,3)},io:function(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2},
+ back:function(t){var c=1.70158;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)}};
+function hs(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+function rr(c,x,y,w,h,r){r=Math.max(0,Math.min(r,Math.abs(w)/2,Math.abs(h)/2));c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath()}
+function mono(p){return "700 "+p+"px 'JetBrains Mono',monospace"}
+function sans(p){return "900 "+p+"px 'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif"}
+function disp(p){return p+"px 'Dela Gothic One','Zen Kaku Gothic New',sans-serif"}
+function lerp(a,b,k){return a+(b-a)*k}
+function tri(c,x,y,s){c.beginPath();c.moveTo(x+s,y);c.lineTo(x-s*.6,y-s*.8);c.lineTo(x-s*.6,y+s*.8);c.closePath();c.fill()}
+function fmt(n){return Math.round(n).toLocaleString("ja-JP")}
+function card(c,x,y,w,h,r,fill){c.fillStyle=C.ink;rr(c,x+4,y+4,w,h,r);c.fill();c.fillStyle=fill||C.bg;rr(c,x,y,w,h,r);c.fill();c.strokeStyle=C.ink;c.lineWidth=2;c.stroke()}
+function tx(c,s,x,y,f,col,al,bl){c.font=f;c.fillStyle=col;c.textAlign=al||"left";c.textBaseline=bl||"middle";c.fillText(s,x,y);c.textAlign="left"}
+function bg(c,w,h){c.fillStyle=C.sur;c.fillRect(0,0,w,h)}
+function check(c,x,y,r,col){c.fillStyle=col||C.c4;c.beginPath();c.arc(x,y,r,0,7);c.fill();c.strokeStyle="#fff";c.lineWidth=Math.max(2,r*.28);c.beginPath();c.moveTo(x-r*.45,y);c.lineTo(x-r*.1,y+r*.38);c.lineTo(x+r*.5,y-r*.32);c.stroke()}
+function typed(s,k){return s.slice(0,Math.ceil(s.length*cl(k)))}
+
+var PV={};
+PV.hero=function(c,w,h,t){
+  bg(c,w,h);var cx=w/2,cy=h/2,n=10,i,names=["動画","声","デザイン","予約","決済","メール","サイト","ネタ帳","自動化","分析"];
+  for(i=0;i<n;i++){var a=t*.22+i*6.283/n,rx=w*.38,ry=h*.36,x=cx+Math.cos(a)*rx,y=cy+Math.sin(a)*ry;
+    c.strokeStyle=C.line;c.lineWidth=2;c.beginPath();c.moveTo(cx,cy);c.lineTo(x,y);c.stroke();
+    var p=((t*.6+i*.37)%1),dir=i%2?p:1-p;c.fillStyle=C.pal[i%5];c.beginPath();c.arc(lerp(cx,x,dir),lerp(cy,y,dir),5,0,7);c.fill();
+    var s=Math.min(w,h)*.085;card(c,x-s,y-s*.62,s*2,s*1.24,10,C.pal[i%5]);tx(c,names[i],x,y+1,sans(s*.42),i%5===2?"#0c0d12":"#fff","center")}
+  var R=Math.min(w,h)*.17*(1+.03*Math.sin(t*2));c.fillStyle=C.ink;c.beginPath();c.arc(cx+5,cy+5,R,0,7);c.fill();c.fillStyle=C.bg;c.beginPath();c.arc(cx,cy,R,0,7);c.fill();c.strokeStyle=C.ink;c.lineWidth=3;c.stroke();
+  tx(c,"Claude",cx,cy-R*.08,disp(R*.42),C.ink,"center");tx(c,"チャット1つで",cx,cy+R*.42,sans(R*.17),C.mut,"center");
+};
+PV.cmpA=function(c,w,h,t){
+  bg(c,w,h);var P=[[.06,.1],[.54,.1],[.06,.56],[.54,.56]],nm=["Claude","動画AI","デザイン","予約投稿"],i,T=6,u=t%T,st=Math.floor(u/1.5)%4,p=E.io(seg(u-st*1.5,.2,1.2)),nx=(st+1)%4;
+  for(i=0;i<4;i++){var x=w*P[i][0],y=h*P[i][1],ww=w*.4,hh=h*.36;card(c,x,y,ww,hh,8);c.fillStyle=C.sur;c.fillRect(x+2,y+2,ww-4,hh*.2);tx(c,nm[i],x+10,y+hh*.12,sans(Math.max(9,h*.05)),C.ink);
+    for(var j=0;j<3;j++){c.fillStyle=C.line;c.fillRect(x+10,y+hh*(.36+j*.18),ww*(.7-j*.15),hh*.08)}
+    if(i===st){c.strokeStyle=C.c2;c.lineWidth=3;rr(c,x-2,y-2,ww+4,hh+4,10);c.stroke()}}
+  var ax=w*(P[st][0]+.2),ay=h*(P[st][1]+.18),bx=w*(P[nx][0]+.2),by=h*(P[nx][1]+.18),mx=lerp(ax,bx,p),my=lerp(ay,by,p);
+  c.fillStyle=C.c3;c.strokeStyle=C.ink;c.lineWidth=2;rr(c,mx-22,my-10,44,20,5);c.fill();c.stroke();tx(c,"コピー",mx,my+1,sans(9),"#0c0d12","center");
+  tx(c,"行き来 "+(Math.floor(t/1.5)%40+1)+"回目",w*.5,h*.5,mono(Math.max(9,h*.05)),C.mut,"center");
+};
+PV.cmpB=function(c,w,h,t){
+  bg(c,w,h);var u=t%6,cx=w*.26,cy=h*.5,i,nm=["動画AI","デザイン","予約投稿"],ww=w*.3,hh=h*.24;
+  card(c,w*.05,h*.14,w*.42,h*.72,10);c.fillStyle=C.sur;c.fillRect(w*.05+2,h*.14+2,w*.42-4,h*.1);tx(c,"Claude",w*.08,h*.195,sans(Math.max(9,h*.05)),C.ink);
+  var msg="動画とサムネを作って、明日の朝に予約して";c.fillStyle=C.c1;rr(c,w*.09,h*.3,w*.34,h*.17,8);c.fill();
+  c.save();c.beginPath();c.rect(w*.09,h*.3,w*.34,h*.17);c.clip();tx(c,typed(msg.slice(0,10),seg(u,.1,.7)),w*.105,h*.355,sans(Math.max(8,h*.042)),"#fff");tx(c,typed(msg.slice(10),seg(u,.7,1.3)),w*.105,h*.42,sans(Math.max(8,h*.042)),"#fff");c.restore();
+  for(i=0;i<3;i++){var x=w*.64,y=h*(.08+i*.3),k=seg(u,1.5+i*.5,2.3+i*.5),done=u>2.6+i*.5;
+    c.strokeStyle=C.line;c.lineWidth=2;c.beginPath();c.moveTo(w*.47,cy);c.lineTo(x,y+hh/2);c.stroke();
+    if(k>0&&k<1){c.fillStyle=C.pal[i];c.beginPath();c.arc(lerp(w*.47,x,k),lerp(cy,y+hh/2,k),6,0,7);c.fill()}
+    card(c,x,y,ww,hh,8,done?C.pal[i]:C.bg);tx(c,nm[i],x+10,y+hh*.32,sans(Math.max(9,h*.05)),done?(i===2?"#0c0d12":"#fff"):C.ink);
+    if(done){check(c,x+ww-18,y+hh*.5,9,C.ink);tx(c,"完了",x+10,y+hh*.7,sans(Math.max(8,h*.04)),i===2?"#0c0d12":"#fff")}else{c.fillStyle=C.line;c.fillRect(x+10,y+hh*.62,ww*.5,hh*.12)}}
+  if(u>4.2){var kk=E.back(seg(u,4.2,4.6));c.save();c.translate(w*.26,h*.66);c.scale(kk,kk);c.fillStyle=C.c4;rr(c,-w*.15,-h*.07,w*.3,h*.14,8);c.fill();tx(c,"3つとも完了",0,1,sans(Math.max(9,h*.048)),"#fff","center");c.restore()}
+};
+/* 生成（Higgsfield） */
+PV.gen=function(c,w,h,t){
+  bg(c,w,h);var u=t%8,i;card(c,w*.04,h*.12,w*.34,h*.76,10);
+  c.fillStyle=C.c1;rr(c,w*.07,h*.2,w*.28,h*.26,8);c.fill();var m=["9:16の","商品動画を","4本作って"];m.forEach(function(s,j){tx(c,typed(s,seg(u,j*.4,j*.4+.4)),w*.09,h*(.26+j*.07),sans(Math.max(8,h*.05)),"#fff")});
+  tx(c,"モデルはおまかせ",w*.07,h*.56,sans(Math.max(8,h*.042)),C.mut);
+  var cr=Math.round(lerp(120,96,seg(u,1.4,5)));tx(c,"クレジット "+cr,w*.07,h*.78,mono(Math.max(8,h*.045)),C.ink);
+  for(i=0;i<4;i++){var x=w*(.43+(i%2)*.275),y=h*(.08+Math.floor(i/2)*.45),ww=w*.25,hh=h*.39,k=seg(u,1.4+i*.35,3.4+i*.35);
+    card(c,x,y,ww,hh,8,k>=1?C.pal[(i+1)%5]:C.bg);c.save();rr(c,x,y,ww,hh,8);c.clip();
+    if(k<1){var sx=((t*1.2+i*.3)%1.6-.3)*ww;c.fillStyle=C.line;c.fillRect(x,y,ww,hh);c.fillStyle=C.sur;c.fillRect(x+sx,y,ww*.3,hh);tx(c,Math.round(k*100)+"%",x+ww/2,y+hh/2,mono(Math.max(10,h*.08)),C.ink,"center")}
+    else{var a=t*1.5+i;c.fillStyle="rgba(255,255,255,.9)";rr(c,x+ww*.3+Math.cos(a)*ww*.12,y+hh*.25+Math.sin(a)*hh*.06,ww*.4,hh*.5,6);c.fill();c.fillStyle=C.ink;c.beginPath();c.arc(x+ww*.5+Math.cos(a)*ww*.12,y+hh*.45,hh*.1,0,7);c.fill();c.fillStyle="#fff";c.fillRect(x+6,y+hh-10,(ww-12)*((t*.2+i*.2)%1),4)}
+    c.restore()}
+};
+PV.avatar=function(c,w,h,t){
+  bg(c,w,h);var L=["日本語","English","中文","Español"],S=["こんにちは、今日のテーマは","Hi, today's topic is","大家好，今天的主题是","Hola, el tema de hoy es"],n=Math.floor(t/2.4)%4,u=(t%2.4)/2.4;
+  var x=w*.05,y=h*.08,ww=w*.44,hh=h*.84;card(c,x,y,ww,hh,10,C.c5);c.save();rr(c,x,y,ww,hh,10);c.clip();
+  var hx=x+ww/2,hy=y+hh*.4+Math.sin(t*1.5)*2,r=hh*.2;c.fillStyle="#f3d9c4";rr(c,hx-r*1.5,hy+r*.9,r*3,hh,r);c.fill();c.fillStyle=C.ink;rr(c,hx-r*1.5,hy+r*1.25,r*3,hh,r*.8);c.fill();
+  c.fillStyle="#f3d9c4";c.beginPath();c.arc(hx,hy,r,0,7);c.fill();c.fillStyle=C.ink;c.beginPath();c.arc(hx,hy-r*.25,r*1.04,3.3,6.1);c.fill();
+  var bl=(t%3.2)>3.05?.15:1;c.fillStyle=C.ink;c.beginPath();c.ellipse(hx-r*.36,hy-r*.02,r*.09,r*.11*bl,0,0,7);c.ellipse(hx+r*.36,hy-r*.02,r*.09,r*.11*bl,0,0,7);c.fill();
+  var mo=Math.abs(Math.sin(t*11))*Math.abs(Math.sin(t*3.1));c.fillStyle="#b3382c";c.beginPath();c.ellipse(hx,hy+r*.48,r*.24,r*(.05+.2*mo),0,0,7);c.fill();c.restore();
+  var k=E.back(seg(u,0,.15));c.save();c.translate(w*.56,h*.16);c.scale(k,k);c.fillStyle=C.c3;rr(c,0,-h*.07,w*.24,h*.14,h*.07);c.fill();c.strokeStyle=C.ink;c.lineWidth=2;c.stroke();tx(c,L[n],w*.12,1,sans(Math.max(9,h*.06)),"#0c0d12","center");c.restore();
+  for(var i=0;i<4;i++){c.fillStyle=i/4<u?C.ink:C.line;rr(c,w*.56,h*(.34+i*.1),w*.38*(i===3?.5:1),h*.05,3);c.fill()}
+  c.fillStyle="#111";rr(c,w*.07,h*.76,ww-w*.04,h*.11,6);c.fill();c.save();c.beginPath();c.rect(w*.07,h*.76,ww-w*.04,h*.11);c.clip();tx(c,typed(S[n],u*1.6),w*.085,h*.817,sans(Math.max(8,h*.045)),"#fff");c.restore();
+  tx(c,"口の動きも自動で同期",w*.56,h*.84,sans(Math.max(8,h*.042)),C.mut);
+};
+PV.voice=function(c,w,h,t){
+  bg(c,w,h);var u=t%6,i,n=44,x0=w*.08,ww=w*.84;
+  function wave(y,amp,col,prog,ph){for(i=0;i<n;i++){if(i/n>prog)break;var v=amp*(.2+.8*Math.abs(Math.sin(i*.55+ph)*Math.sin(i*.17+ph*.6+t*(ph?2:0))));c.fillStyle=col;rr(c,x0+i*ww/n,y-v,ww/n-2,v*2,2);c.fill()}}
+  tx(c,"選んだ声",x0,h*.1,sans(Math.max(8,h*.045)),C.mut);wave(h*.25,h*.1,C.mut,1,0);
+  tx(c,"その声で読み上げ",x0,h*.46,sans(Math.max(8,h*.045)),C.c2);wave(h*.62,h*.12,C.c2,seg(u,.6,4.6),1.7);
+  var s="この文章を、選んだ声で読み上げます",k=seg(u,.6,4.6);c.font=sans(Math.max(9,h*.055));var tw=c.measureText(s).width,sx=(w-tw)/2;
+  c.fillStyle=C.c3;c.fillRect(sx-4,h*.83,(tw+8)*k,h*.1);tx(c,s,sx,h*.885,sans(Math.max(9,h*.055)),k>.02?C.ink:C.mut);
+  if(k<.05)tx(c,"",0,0,sans(8),C.ink);
+};
+PV.hfm=function(c,w,h,t){
+  bg(c,w,h);var u=t%5,x=w*.12,y=h*.1,ww=w*.76,hh=h*.68;card(c,x,y,ww,hh,10);c.save();rr(c,x,y,ww,hh,10);c.clip();
+  c.fillStyle=C.c2;c.beginPath();c.arc(x+ww*.82,y+hh*.25,hh*.3*E.back(seg(u,0,.7)),0,7);c.fill();
+  ["図解も","モーションも","HTMLで"].forEach(function(s,i){var k=E.back(seg(u,.3+i*.2,.9+i*.2)),o=1-seg(u,4.3,4.8);c.globalAlpha=cl(k*2)*o;tx(c,s,x+ww*.08+(1-k)*-40,y+hh*(.3+i*.24),disp(hh*.17),i===1?C.c1:C.ink)});c.globalAlpha=1;
+  for(var i=0;i<4;i++){var b=E.back(seg(u,1.6+i*.12,2.3+i*.12)),bh=hh*(.12+.08*i)*Math.max(0,b);c.fillStyle=i%2?C.c4:C.ink;c.fillRect(x+ww*.62+i*ww*.08,y+hh*.9-bh,ww*.055,bh)}c.restore();
+  c.fillStyle=C.line;rr(c,x,h*.86,ww,6,3);c.fill();c.fillStyle=C.c1;rr(c,x,h*.86,ww*(u/5),6,3);c.fill();c.fillStyle=C.ink;c.beginPath();c.arc(x+ww*(u/5),h*.86+3,5,0,7);c.fill();
+};
+PV.edit=function(c,w,h,t){
+  bg(c,w,h);var u=t%7,i,W=[["えーと、",1],["今日は",0],["AI動画の",0],["あのー、",1],["作り方を",0],["えー、",1],["話します",0]],x=w*.07,y=h*.2;
+  card(c,w*.04,h*.07,w*.92,h*.36,10);c.font=sans(Math.max(10,h*.068));
+  W.forEach(function(wd,j){var tw=c.measureText(wd[0]).width,k=wd[1]?seg(u,1+j*.25,1.5+j*.25):0;if(x+tw>w*.92){x=w*.07;y+=h*.12}
+    tx(c,wd[0],x,y,sans(Math.max(10,h*.068)),wd[1]?(k>0?C.c2:C.ink):C.ink);if(k>0){c.strokeStyle=C.c2;c.lineWidth=3;c.beginPath();c.moveTo(x,y);c.lineTo(x+tw*k,y);c.stroke()}x+=tw+4});
+  tx(c,"言葉を消すと、動画も切れる",w*.07,h*.52,sans(Math.max(8,h*.045)),C.mut);
+  var B=[[.1,1],[.16,0],[.2,0],[.1,1],[.18,0],[.08,1],[.18,0]],bx=w*.05,sh=seg(u,3.2,4.6);
+  B.forEach(function(b,j){var bw=w*.9*b[0]*(b[1]?1-E.io(sh):1+(.39*E.io(sh)));if(bw<1)return;c.fillStyle=b[1]?C.c2:C.pal[(j*2)%5===1?0:(j*2)%5];if(!b[1])c.fillStyle=j%2?C.c1:C.c5;rr(c,bx,h*.62,Math.max(0,bw-3),h*.2,5);c.fill();bx+=bw});
+  var ph=w*.05+w*.9*((u/7));c.fillStyle=C.ink;c.fillRect(ph,h*.58,3,h*.28);
+};
+PV.clip=function(c,w,h,t){
+  bg(c,w,h);var u=t%7,i,S=[[.12,.14],[.42,.12],[.72,.16]];
+  c.fillStyle=C.line;rr(c,w*.05,h*.1,w*.9,h*.12,5);c.fill();tx(c,"60分の元動画",w*.05,h*.05,sans(Math.max(8,h*.042)),C.mut);
+  var sc=seg(u,0,1.8);c.fillStyle=C.ink;c.fillRect(w*.05+w*.9*sc,h*.08,3,h*.16);
+  S.forEach(function(s,j){if(sc>s[0]){c.fillStyle=C.pal[j];rr(c,w*(.05+.9*s[0]),h*.1,w*.9*s[1]*seg(sc,s[0],s[0]+s[1]),h*.12,5);c.fill()}
+    var k=E.back(seg(u,2+j*.4,2.7+j*.4));if(k<=0)return;var pw=w*.2,ph=h*.6,px=w*(.14+j*.26),py=lerp(h*.16,h*.33,k);c.globalAlpha=cl(k);card(c,px,py,pw,ph,10,C.pal[j]);
+    c.fillStyle="rgba(255,255,255,.9)";c.beginPath();c.arc(px+pw/2,py+ph*.36,pw*.2,0,7);c.fill();rr(c,px+pw*.2,py+ph*.52,pw*.6,ph*.3,pw*.2);c.fill();
+    c.fillStyle="#111";rr(c,px+6,py+ph*.82,pw-12,ph*.11,4);c.fill();c.fillStyle=C.c3;c.fillRect(px+10,py+ph*.855,(pw-20)*((t*.6+j*.3)%1),ph*.04);
+    c.fillStyle=C.bg;c.beginPath();c.arc(px+pw-4,py+4,14,0,7);c.fill();c.strokeStyle=C.ink;c.lineWidth=2;c.stroke();tx(c,String([92,88,85][j]),px+pw-4,py+5,mono(10),C.ink,"center");c.globalAlpha=1});
+};
+PV.design=function(c,w,h,t){
+  bg(c,w,h);var R=[[1,1,"Instagram投稿"],[9/16,1,"リール表紙"],[16/9,1,"YouTubeサムネ"]],P=2.6,n=Math.floor(t/P)%3,u=(t%P)/P,k=E.back(seg(u,0,.35)),a=R[n],b=R[(n+2)%3];
+  function sz(r){var H=h*.7,W=H*r[0];if(W>w*.62){W=w*.62;H=W/r[0]}return [W,H]}
+  var A=sz(b),B=sz(a),W=lerp(A[0],B[0],k),H=lerp(A[1],B[1],k),x=w*.38-W/2+w*.02,y=h*.5-H/2;card(c,x,y,W,H,6);
+  c.save();rr(c,x,y,W,H,6);c.clip();c.fillStyle=C.c3;c.fillRect(x,y,W,H*.5);c.fillStyle=C.c2;c.beginPath();c.arc(x+W*.72,y+H*.34,Math.min(W,H)*.2,0,7);c.fill();
+  c.fillStyle=C.ink;rr(c,x+W*.08,y+H*.58,W*.7,H*.09,3);c.fill();rr(c,x+W*.08,y+H*.71,W*.48,H*.07,3);c.fill();c.fillStyle=C.c1;rr(c,x+W*.08,y+H*.84,W*.36,H*.09,H*.045);c.fill();c.restore();
+  R.forEach(function(r,i){var yy=h*(.24+i*.2),on=i===n;c.fillStyle=on?C.ink:C.bg;c.strokeStyle=C.ink;c.lineWidth=2;rr(c,w*.71,yy,w*.25,h*.14,h*.07);c.fill();c.stroke();tx(c,r[2],w*.835,yy+h*.072,sans(Math.max(8,h*.042)),on?C.bg:C.ink,"center")});
+  tx(c,"1つ作れば、形を変えて展開",w*.71,h*.88,sans(Math.max(7,h*.036)),C.mut);
+};
+PV.fig=function(c,w,h,t){
+  bg(c,w,h);var u=t%6,N=[[.18,.3,"集客"],[.5,.22,"教育"],[.82,.3,"販売"],[.5,.72,"リピート"]],i,bw=w*.22,bh=h*.2;
+  c.fillStyle=C.line;for(i=1;i<14;i++)for(var j=1;j<8;j++){c.beginPath();c.arc(w*i/14,h*j/8,1,0,7);c.fill()}
+  [[0,1],[1,2],[2,3],[3,0]].forEach(function(e,j){var k=E.io(seg(u,1+j*.5,1.5+j*.5));if(k<=0)return;var a=N[e[0]],b=N[e[1]];c.strokeStyle=C.ink;c.lineWidth=2.5;c.beginPath();c.moveTo(w*a[0],h*a[1]);c.lineTo(lerp(w*a[0],w*b[0],k),lerp(h*a[1],h*b[1],k));c.stroke()});
+  N.forEach(function(nd,j){var k=E.back(seg(u,j*.2,j*.2+.5));if(k<=0)return;c.save();c.translate(w*nd[0],h*nd[1]);c.scale(k,k);c.rotate((j%2?1:-1)*.03);c.fillStyle=C.ink;rr(c,-bw/2+3,-bh/2+3,bw,bh,5);c.fill();c.fillStyle=C.pal[j];rr(c,-bw/2,-bh/2,bw,bh,5);c.fill();tx(c,nd[2],0,1,sans(bh*.34),j===2?"#0c0d12":"#fff","center");c.restore()});
+  var s=Math.floor(u/1.5)%4,nd=N[s];c.strokeStyle=C.c1;c.lineWidth=2;c.strokeRect(w*nd[0]-bw/2-5,h*nd[1]-bh/2-5,bw+10,bh+10);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){c.fillStyle=C.bg;c.fillRect(w*nd[0]+q[0]*(bw/2+5)-4,h*nd[1]+q[1]*(bh/2+5)-4,8,8);c.strokeRect(w*nd[0]+q[0]*(bw/2+5)-4,h*nd[1]+q[1]*(bh/2+5)-4,8,8)});
+};
+PV.slides=function(c,w,h,t){
+  bg(c,w,h);var u=t%6,i,O=["1 つかみ","2 悩み","3 解決策","4 事例","5 案内"];
+  card(c,w*.04,h*.1,w*.3,h*.8,8);O.forEach(function(s,j){tx(c,typed(s,seg(u,j*.25,j*.25+.3)),w*.065,h*(.22+j*.14),sans(Math.max(8,h*.05)),C.ink)});
+  for(i=0;i<5;i++){var k=E.back(seg(u,1.5+i*.18,2.2+i*.18));if(k<=0)continue;var x=lerp(w*.5,w*(.4+i*.105),k),y=h*(.2+i*.05),ww=w*.3,hh=ww*9/16;c.save();c.translate(x+ww/2,y+hh/2);c.rotate((i-2)*.04*k);
+    card(c,-ww/2,-hh/2,ww,hh,6);c.fillStyle=C.pal[i];c.fillRect(-ww/2+8,-hh/2+8,ww*.5,hh*.16);c.fillStyle=C.line;c.fillRect(-ww/2+8,-hh/2+hh*.36,ww*.8,hh*.1);c.fillRect(-ww/2+8,-hh/2+hh*.54,ww*.6,hh*.1);c.fillStyle=C.pal[i];c.globalAlpha=.4;c.fillRect(ww/2-ww*.3,hh/2-hh*.36,ww*.24,hh*.28);c.globalAlpha=1;c.restore()}
+};
+PV.sched=function(c,w,h,t){
+  bg(c,w,h);var u=t%7,D=["月","火","水","木","金","土","日"],i,j,cw=w*.9/7,x0=w*.05,y0=h*.2,rh=h*.2,best=4;
+  c.fillStyle=C.c3;c.globalAlpha=.35;c.fillRect(x0+best*cw,h*.08,cw,h*.76);c.globalAlpha=1;
+  D.forEach(function(d,i){tx(c,d,x0+i*cw+cw/2,h*.13,sans(Math.max(9,h*.055)),C.ink,"center");c.strokeStyle=C.line;c.lineWidth=1;c.strokeRect(x0+i*cw,y0,cw,rh*3)});
+  var n=0;for(j=0;j<3;j++)for(i=0;i<7;i++){if(hs(i*7+j*3+1)<.45)continue;var k=E.back(seg(u,.5+n*.22,1+n*.22));n++;if(k<=0)continue;var yy=lerp(y0-30,y0+j*rh+4,k);c.globalAlpha=cl(k);c.fillStyle=C.pal[(i+j)%5];rr(c,x0+i*cw+3,yy,cw-6,rh-8,5);c.fill();c.fillStyle="rgba(255,255,255,.85)";c.fillRect(x0+i*cw+8,yy+rh*.25,cw*.5,3);c.globalAlpha=1}
+  var cnt=Math.min(n,Math.floor(seg(u,.5,.5+n*.22)*n));tx(c,"今週 "+cnt+"本 予約済み",x0,h*.92,sans(Math.max(9,h*.05)),C.ink);tx(c,"金曜が反応よし",w*.95,h*.92,sans(Math.max(8,h*.042)),C.mut,"right");
+};
+PV.chart=function(c,w,h,t,st,dt,a){
+  bg(c,w,h);var u=t%6,i,K=a&&a.id==="ah"?["AI 始め方","副業 AI","動画 作り方"]:["伸びてるネタ A","伸びてるネタ B","伸びてるネタ C"];
+  K.forEach(function(s,j){var k=E.out(seg(u,j*.3,j*.3+.8)),y=h*(.2+j*.24);tx(c,s,w*.05,y,sans(Math.max(8,h*.046)),C.ink);c.fillStyle=C.line;rr(c,w*.05,y+h*.06,w*.32,h*.06,3);c.fill();c.fillStyle=C.pal[j];rr(c,w*.05,y+h*.06,w*.32*k*(.9-j*.2),h*.06,3);c.fill()});
+  var gx=w*.44,gy=h*.1,gw=w*.5,gh=h*.72,p=seg(u,.8,3.6),n=30;c.strokeStyle=C.line;c.lineWidth=1.5;c.strokeRect(gx,gy,gw,gh);
+  function Y(i){return gy+gh-gh*(.12+.7*Math.pow(i/n,2.2)+.05*Math.sin(i*1.3))}
+  c.beginPath();c.moveTo(gx,gy+gh);for(i=0;i<=n*p;i++)c.lineTo(gx+gw*i/n,Y(i));c.lineTo(gx+gw*Math.floor(n*p)/n,gy+gh);c.closePath();c.fillStyle=C.c1;c.globalAlpha=.18;c.fill();c.globalAlpha=1;
+  c.strokeStyle=C.c1;c.lineWidth=3;c.beginPath();for(i=0;i<=n*p;i++){if(i)c.lineTo(gx+gw*i/n,Y(i));else c.moveTo(gx,Y(0))}c.stroke();
+  var li=Math.floor(n*p);c.fillStyle=C.c2;c.beginPath();c.arc(gx+gw*li/n,Y(li),6,0,7);c.fill();
+  if(p>=1){var k=E.back(seg(u,3.6,4));c.save();c.translate(gx+gw*.72,gy+gh*.2);c.scale(k,k);c.fillStyle=C.c2;rr(c,-w*.11,-h*.06,w*.22,h*.12,h*.06);c.fill();tx(c,"急上昇",0,1,sans(Math.max(8,h*.046)),"#fff","center");c.restore()}
+};
+PV.pay=function(c,w,h,t){
+  bg(c,w,h);var u=t%7,i;card(c,w*.05,h*.12,w*.38,h*.76,10);c.fillStyle=C.c4;rr(c,w*.08,h*.18,w*.32,h*.26,6);c.fill();tx(c,"デジタル教材",w*.08,h*.54,sans(Math.max(9,h*.055)),C.ink);tx(c,"¥2,980",w*.08,h*.65,mono(Math.max(11,h*.08)),C.ink);
+  var pk=1+.05*Math.sin(t*5);c.save();c.translate(w*.24,h*.79);c.scale(pk,pk);c.fillStyle=C.c1;rr(c,-w*.16,-h*.055,w*.32,h*.11,h*.055);c.fill();tx(c,"購入する",0,1,sans(Math.max(8,h*.046)),"#fff","center");c.restore();
+  var n=Math.min(4,Math.floor(u/1.2)),tot=0;for(i=0;i<4;i++){var k=E.back(seg(u,.4+i*1.2,.9+i*1.2));if(k<=0)continue;tot+=2980;var y=h*(.34+i*.14);c.globalAlpha=cl(k);card(c,lerp(w,w*.5,k),y,w*.45,h*.11,6);check(c,lerp(w,w*.5,k)+16,y+h*.055,8);tx(c,"¥2,980　入金",lerp(w,w*.5,k)+32,y+h*.058,mono(Math.max(8,h*.044)),C.ink);c.globalAlpha=1}
+  tx(c,"今日の売上（サンプル）",w*.5,h*.12,sans(Math.max(8,h*.042)),C.mut);tx(c,"¥"+fmt(tot),w*.5,h*.23,disp(Math.max(14,h*.11)),C.c4);
+};
+PV.shop=function(c,w,h,t){
+  bg(c,w,h);var u=t%6,i;for(i=0;i<3;i++){var k=E.back(seg(u,i*.25,i*.25+.6));if(k<=0)continue;var x=w*(.05+i*.31),y=lerp(h,h*.1,k),ww=w*.28,hh=h*.66;card(c,x,y,ww,hh,8);c.fillStyle=C.pal[i+1];rr(c,x+6,y+6,ww-12,hh*.5,5);c.fill();c.fillStyle="rgba(255,255,255,.85)";c.beginPath();c.arc(x+ww/2,y+hh*.3,hh*.13,0,7);c.fill();
+    c.fillStyle=C.ink;c.fillRect(x+8,y+hh*.62,ww*.6,hh*.06);tx(c,"¥"+fmt([1980,4800,980][i]),x+8,y+hh*.8,mono(Math.max(8,h*.05)),C.ink);tx(c,"在庫 "+Math.max(0,[12,5,30][i]-Math.floor(seg(u,2,5)*[3,2,6][i])),x+8,y+hh*.92,sans(Math.max(7,h*.038)),C.mut)}
+  var q=(u-2)%1.4,kk=u>2?E.back(seg(q,0,.3))*(1-seg(q,1,1.3)):0;if(kk>0){c.save();c.translate(w*.72,h*.89);c.scale(kk,kk);c.fillStyle=C.c4;rr(c,-w*.22,-h*.06,w*.44,h*.12,h*.06);c.fill();c.strokeStyle=C.ink;c.lineWidth=2;c.stroke();tx(c,"新しい注文が入りました",0,1,sans(Math.max(8,h*.044)),"#fff","center");c.restore()}
+};
+PV.course=function(c,w,h,t){
+  bg(c,w,h);var u=t%7,M=["第1章 はじめに","第2章 準備","第3章 実践","第4章 販売"],i;card(c,w*.05,h*.1,w*.5,h*.8,10);
+  M.forEach(function(s,j){var y=h*(.22+j*.17),k=seg(u,.4+j*.6,.8+j*.6);c.strokeStyle=C.line;c.lineWidth=2;c.beginPath();c.arc(w*.1,y,h*.04,0,7);c.stroke();if(k>0)check(c,w*.1,y,h*.04*E.back(k));tx(c,typed(s,seg(u,j*.6,j*.6+.4)),w*.15,y,sans(Math.max(8,h*.05)),C.ink)});
+  tx(c,"メールも自動で配信",w*.6,h*.16,sans(Math.max(8,h*.044)),C.mut);["登録直後","3日後","7日後"].forEach(function(s,j){var k=E.back(seg(u,3+j*.7,3.5+j*.7)),y=h*(.3+j*.2);c.fillStyle=k>0?C.pal[j]:C.line;rr(c,w*.6,y,w*.34,h*.14,6);c.fill();tx(c,s,w*.63,y+h*.072,sans(Math.max(8,h*.046)),k>0?(j===2?"#0c0d12":"#fff"):C.mut);if(j<2){c.fillStyle=C.ink;c.fillRect(w*.77-1,y+h*.14,2,h*.06)}});
+};
+PV.mail=function(c,w,h,t){
+  bg(c,w,h);var u=t%7,i;card(c,w*.05,h*.1,w*.56,h*.8,10);tx(c,"件名",w*.08,h*.2,sans(Math.max(7,h*.038)),C.mut);tx(c,typed("今週のAIまとめが届きました",seg(u,.2,1.4)),w*.08,h*.29,sans(Math.max(8,h*.048)),C.ink);
+  c.fillStyle=C.line;c.fillRect(w*.08,h*.36,w*.5,2);for(i=0;i<4;i++){c.fillStyle=C.line;rr(c,w*.08,h*(.43+i*.09),w*.5*(i===3?.5:1)*E.out(seg(u,1.4+i*.2,2+i*.2)),h*.045,3);c.fill()}
+  var bk=E.back(seg(u,2.4,2.8));c.fillStyle=C.c1;rr(c,w*.08,h*.78,w*.2*bk,h*.08,h*.04);c.fill();
+  var f=seg(u,3,4.2);if(f>0&&f<1){var px=lerp(w*.5,w*.95,E.io(f)),py=h*.5-Math.sin(f*3.14)*h*.25;c.fillStyle=C.c2;c.beginPath();c.moveTo(px+16,py);c.lineTo(px-12,py-10);c.lineTo(px-5,py);c.lineTo(px-12,py+10);c.closePath();c.fill()}
+  tx(c,"開封率（サンプル）",w*.66,h*.2,sans(Math.max(7,h*.04)),C.mut);var o=E.out(seg(u,4.2,5.6));tx(c,Math.round(48*o)+"%",w*.66,h*.36,disp(Math.max(16,h*.14)),C.c4);
+  c.fillStyle=C.line;rr(c,w*.66,h*.5,w*.28,h*.06,3);c.fill();c.fillStyle=C.c4;rr(c,w*.66,h*.5,w*.28*.48*o,h*.06,3);c.fill();
+  tx(c,"配信 "+fmt(1200*seg(u,3,4.2))+"人",w*.66,h*.68,mono(Math.max(8,h*.046)),C.ink);
+};
+PV.cal=function(c,w,h,t){
+  bg(c,w,h);var u=t%6,i,j,x0=w*.05,cw=w*.07,y0=h*.24;tx(c,"相談予約",x0,h*.12,sans(Math.max(9,h*.055)),C.ink);
+  for(j=0;j<4;j++)for(i=0;i<7;i++){var d=j*7+i+1,free=hs(d)>.5;c.fillStyle=free?C.bg:C.line;c.strokeStyle=C.line;c.lineWidth=1;rr(c,x0+i*cw,y0+j*h*.15,cw-4,h*.13,4);c.fill();c.stroke();if(d===17){c.strokeStyle=C.c1;c.lineWidth=3;c.stroke()}tx(c,String(d),x0+i*cw+(cw-4)/2,y0+j*h*.15+h*.068,mono(Math.max(7,h*.04)),free?C.ink:C.mut,"center")}
+  var S=["10:00","13:00","15:30","19:00"],sel=2;S.forEach(function(s,j){var y=h*(.2+j*.16),on=j===sel&&u>2,k=on?E.back(seg(u,2,2.4)):0;c.fillStyle=on?C.c1:C.bg;c.strokeStyle=C.ink;c.lineWidth=2;rr(c,w*.6,y,w*.34,h*.12,h*.06);c.fill();c.stroke();tx(c,s,w*.77,y+h*.062,mono(Math.max(9,h*.05)),on?"#fff":C.ink,"center")});
+  var cx=lerp(w*.9,w*.82,E.io(seg(u,1,2))),cy=lerp(h*.9,h*.58,E.io(seg(u,1,2)));c.fillStyle=C.c2;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx,cy+15);c.lineTo(cx+4,cy+11);c.lineTo(cx+7,cy+17);c.lineTo(cx+10,cy+15);c.lineTo(cx+7,cy+10);c.lineTo(cx+12,cy+10);c.closePath();c.fill();
+  if(u>3){var kk=E.back(seg(u,3,3.4));c.save();c.translate(w*.77,h*.9);c.scale(kk,kk);c.fillStyle=C.c4;rr(c,-w*.17,-h*.055,w*.34,h*.11,h*.055);c.fill();tx(c,"予約が確定",0,1,sans(Math.max(8,h*.046)),"#fff","center");c.restore()}
+};
+PV.web=function(c,w,h,t,st,dt,a){
+  bg(c,w,h);var u=t%7,x=w*.08,y=h*.08,ww=w*.84,hh=h*.84,i;card(c,x,y,ww,hh,10);c.fillStyle=C.sur;c.fillRect(x+2,y+2,ww-4,hh*.12);for(i=0;i<3;i++){c.fillStyle=[C.c2,C.c3,C.c4][i];c.beginPath();c.arc(x+14+i*12,y+hh*.065,4,0,7);c.fill()}
+  c.fillStyle=C.bg;rr(c,x+56,y+hh*.025,ww*.6,hh*.08,4);c.fill();tx(c,typed("your-site.com",seg(u,4.6,5.6)),x+62,y+hh*.068,mono(Math.max(7,h*.038)),C.ink);
+  c.save();c.beginPath();c.rect(x,y+hh*.13,ww,hh*.87);c.clip();var k;
+  k=E.out(seg(u,.2,.7));c.fillStyle=C.ink;c.fillRect(x+12,y+hh*.18,(ww-24)*k,hh*.05);
+  k=E.back(seg(u,.8,1.4));if(k>0){c.fillStyle=C.pal[a?a.ci%5:0];rr(c,x+12,y+hh*.27,(ww-24)*.58*k,hh*.3,6);c.fill();c.fillStyle="#fff";c.fillRect(x+22,y+hh*.33,ww*.3*k,hh*.05);c.fillRect(x+22,y+hh*.42,ww*.2*k,hh*.035)}
+  k=E.back(seg(u,1.5,2.1));if(k>0){c.fillStyle=C.c3;rr(c,x+12+(ww-24)*.62,y+hh*.27,(ww-24)*.38*k,hh*.3,6);c.fill()}
+  for(i=0;i<3;i++){k=E.back(seg(u,2.3+i*.2,2.9+i*.2));if(k<=0)continue;var cw=(ww-24-16)/3;c.fillStyle=C.sur;c.strokeStyle=C.line;c.lineWidth=1.5;rr(c,x+12+i*(cw+8),lerp(y+hh,y+hh*.62,k),cw,hh*.2,5);c.fill();c.stroke();c.fillStyle=C.pal[i+1];c.fillRect(x+20+i*(cw+8),lerp(y+hh,y+hh*.66,k),cw*.3,hh*.04)}
+  k=E.back(seg(u,3.4,3.9));if(k>0){c.fillStyle=C.c1;rr(c,x+ww/2-ww*.14*k,y+hh*.86,ww*.28*k,hh*.08,hh*.04);c.fill()}
+  c.restore();if(u>5.6){k=E.back(seg(u,5.6,6));c.save();c.translate(x+ww-40,y+hh*.22);c.scale(k,k);c.rotate(.14);c.fillStyle=C.c4;rr(c,-34,-15,68,30,15);c.fill();c.strokeStyle=C.ink;c.lineWidth=2;c.stroke();tx(c,"公開",0,1,sans(13),"#fff","center");c.restore()}
+};
+PV.db=function(c,w,h,t){
+  bg(c,w,h);var u=t%8,R=["リール台本 11/20","note記事 下書き","LINE配信 文面","サムネ案 3種","週次ふりかえり"],S=[["ネタ",C.line],["下書き",C.c3],["予約済み",C.c1],["公開",C.c4]],i;card(c,w*.04,h*.07,w*.92,h*.86,10);
+  c.fillStyle=C.sur;c.fillRect(w*.04+2,h*.07+2,w*.92-4,h*.12);tx(c,"タイトル",w*.07,h*.135,sans(Math.max(8,h*.042)),C.mut);tx(c,"状態",w*.66,h*.135,sans(Math.max(8,h*.042)),C.mut);
+  R.forEach(function(s,j){var k=E.out(seg(u,j*.35,j*.35+.5));if(k<=0)return;var y=h*(.26+j*.13);c.globalAlpha=k;tx(c,s,w*.07,y,sans(Math.max(8,h*.046)),C.ink);c.strokeStyle=C.line;c.lineWidth=1;c.beginPath();c.moveTo(w*.06,y+h*.065);c.lineTo(w*.94,y+h*.065);c.stroke();
+    var si=Math.min(3,Math.floor(Math.max(0,u-2-j*.5)/1.1)+(j%2)),sv=S[Math.min(3,si)];c.fillStyle=sv[1];rr(c,w*.66,y-h*.045,w*.24,h*.09,h*.045);c.fill();tx(c,sv[0],w*.78,y+1,sans(Math.max(8,h*.042)),si===1||si===0?"#0c0d12":"#fff","center");c.globalAlpha=1});
+};
+PV.flow=function(c,w,h,t){
+  bg(c,w,h);var N=[[.14,.28,"フォーム回答"],[.5,.28,"表に追加"],[.86,.28,"お礼メール"],[.5,.74,"自分に通知"]],L=[[0,1],[1,2],[1,3]],u=t%5,bw=w*.24,bh=h*.24,i;
+  L.forEach(function(e,j){var a=N[e[0]],b=N[e[1]];c.strokeStyle=C.ink;c.lineWidth=2.5;c.setLineDash([6,6]);c.lineDashOffset=-t*20;c.beginPath();c.moveTo(w*a[0],h*a[1]);c.lineTo(w*b[0],h*b[1]);c.stroke();c.setLineDash([]);
+    var k=seg(u,(j?1.6:.4),(j?2.6:1.4));if(k>0&&k<1){c.fillStyle=C.c2;c.beginPath();c.arc(lerp(w*a[0],w*b[0],k),lerp(h*a[1],h*b[1],k),7,0,7);c.fill()}});
+  N.forEach(function(nd,j){var on=u>[.2,1.4,2.6,2.6][j],pp=on?1+.06*Math.max(0,1-(u-[.2,1.4,2.6,2.6][j])*2):1;c.save();c.translate(w*nd[0],h*nd[1]);c.scale(pp,pp);card(c,-bw/2,-bh/2,bw,bh,10,on?C.pal[j]:C.bg);tx(c,nd[2],0,1,sans(Math.max(8,bh*.24)),on?(j===2?"#0c0d12":"#fff"):C.ink,"center");c.restore()});
+  tx(c,"一度組めば、あとは自動",w*.05,h*.92,sans(Math.max(8,h*.042)),C.mut);
+};
+PV.scrape=function(c,w,h,t){
+  bg(c,w,h);var u=t%6,i;card(c,w*.04,h*.08,w*.4,h*.84,10);c.fillStyle=C.sur;c.fillRect(w*.04+2,h*.08+2,w*.4-4,h*.1);
+  for(i=0;i<6;i++){c.fillStyle=i%3===0?C.ink:C.line;rr(c,w*.07,h*(.24+i*.1),w*.34*(i%3===0?.6:(i%2?.9:.75)),h*.05,3);c.fill()}
+  var sy=h*.2+h*.66*((u%3)/3);c.fillStyle=C.c1;c.globalAlpha=.2;c.fillRect(w*.04,sy-h*.06,w*.4,h*.06);c.globalAlpha=1;c.fillRect(w*.04,sy,w*.4,3);
+  tx(c,"→",w*.47,h*.5,disp(Math.max(14,h*.1)),C.ink,"center");
+  ["タイトル","価格","見出し","URL"].forEach(function(s,j){var k=E.back(seg(u,.8+j*.6,1.3+j*.6));if(k<=0)return;var y=h*(.14+j*.2);c.globalAlpha=cl(k);card(c,lerp(w,w*.52,k),y,w*.44,h*.15,6);c.fillStyle=C.pal[j+1];rr(c,lerp(w,w*.52,k)+8,y+h*.04,w*.12,h*.07,4);c.fill();tx(c,s,lerp(w,w*.52,k)+8+w*.06,y+h*.077,sans(Math.max(7,h*.036)),j===1?"#0c0d12":"#fff","center");c.fillStyle=C.line;c.fillRect(lerp(w,w*.52,k)+w*.16,y+h*.06,w*.24,h*.035);c.globalAlpha=1});
+};
+PV.duo=function(c,w,h,t){
+  bg(c,w,h);var u=t%8,S=["設計","実装","レビュー","修正"],st=Math.min(3,Math.floor(u/1.8)),p=(u-st*1.8)/1.8,i,who=[0,1,1,0];
+  ["Claude","Codex"].forEach(function(n,j){var x=w*(.05+j*.5),on=who[st]===j;card(c,x,h*.1,w*.4,h*.5,10,on?(j?C.c4:C.c2):C.bg);tx(c,n,x+w*.2,h*.25,disp(Math.max(12,h*.09)),on?"#fff":C.ink,"center");
+    for(i=0;i<3;i++){c.fillStyle=on?"rgba(255,255,255,.8)":C.line;rr(c,x+w*.05,h*(.36+i*.07),w*.3*(on?seg(p,i*.2,i*.2+.4):.6),h*.035,2);c.fill()}});
+  var dir=who[st]?1:-1,k=E.io(seg(p,.7,1));if(k>0&&k<1&&st<3){var from=who[st],to=who[st+1];if(from!==to){c.fillStyle=C.c3;c.strokeStyle=C.ink;c.lineWidth=2;var px=lerp(w*(.25+from*.5),w*(.25+to*.5),k);rr(c,px-16,h*.3,32,22,5);c.fill();c.stroke()}}
+  S.forEach(function(s,j){var x=w*(.08+j*.23),done=j<st,on=j===st;c.fillStyle=done?C.c4:on?C.c3:C.bg;c.strokeStyle=C.ink;c.lineWidth=2;rr(c,x,h*.72,w*.2,h*.16,h*.08);c.fill();c.stroke();tx(c,(done?"✓ ":"")+s,x+w*.1,h*.805,sans(Math.max(8,h*.048)),done?"#fff":(on?"#0c0d12":C.ink),"center")});
+};
+PV.music=function(c,w,h,t){
+  bg(c,w,h);var u=t%8,i,n=28,beat=Math.pow(Math.abs(Math.sin(t*3.6)),6);
+  c.fillStyle=C.c1;rr(c,w*.05,h*.08,w*.5,h*.14,h*.07);c.fill();tx(c,typed("明るいBGM、歌なし、30秒",seg(u,0,1.2)),w*.08,h*.152,sans(Math.max(8,h*.05)),"#fff");
+  for(i=0;i<n;i++){var k=seg(u,1.2,2),v=h*.34*k*(.15+.85*Math.abs(Math.sin(i*.5+t*4)*Math.sin(i*.21+t*1.7)))*(1+beat*.3);c.fillStyle=C.pal[i%5];rr(c,w*.05+i*(w*.62/n),h*.62-v,w*.62/n-3,v,3);c.fill()}
+  var cx=w*.82,cy=h*.42,R=h*.26*(1+beat*.04);c.fillStyle=C.ink;c.beginPath();c.arc(cx,cy,R,0,7);c.fill();c.strokeStyle=C.mut;c.lineWidth=1;for(i=1;i<4;i++){c.beginPath();c.arc(cx,cy,R*i/4,0,7);c.stroke()}
+  c.save();c.translate(cx,cy);c.rotate(t*2);c.fillStyle=C.c3;c.beginPath();c.arc(0,0,R*.34,0,7);c.fill();c.fillStyle=C.ink;c.fillRect(-2,-R*.3,4,R*.2);c.restore();
+  var p=seg(u,1.2,7.2);c.fillStyle=C.line;rr(c,w*.05,h*.74,w*.62,h*.04,3);c.fill();c.fillStyle=C.c2;rr(c,w*.05,h*.74,w*.62*p,h*.04,3);c.fill();c.fillStyle=C.ink;c.beginPath();c.arc(w*.05+w*.62*p,h*.76,6,0,7);c.fill();
+  tx(c,"0:"+("0"+Math.floor(p*30)).slice(-2)+" / 0:30",w*.05,h*.88,mono(Math.max(8,h*.046)),C.ink);
+  if(p>=1){var kk=E.back(seg(u,7.2,7.5));c.save();c.translate(w*.52,h*.88);c.scale(kk,kk);c.fillStyle=C.c4;rr(c,-w*.15,-h*.055,w*.3,h*.11,h*.055);c.fill();tx(c,"曲が完成",0,1,sans(Math.max(8,h*.046)),"#fff","center");c.restore()}
+};
+PV.post=function(c,w,h,t,st,dt,a){
+  bg(c,w,h);var u=t%8,i,ig=a&&a.id==="ig";card(c,w*.04,h*.1,w*.4,h*.8,10);
+  tx(c,"下書き",w*.07,h*.19,sans(Math.max(8,h*.042)),C.mut);["新しい図鑑を公開","コピペだけで","つなげます"].forEach(function(s,j){tx(c,typed(s,seg(u,j*.4,j*.4+.5)),w*.07,h*(.3+j*.09),sans(Math.max(9,h*.055)),C.ink)});
+  var ik=E.back(seg(u,1.4,1.9));if(ik>0){c.fillStyle=C.pal[a?a.ci%5:0];rr(c,w*.07,h*.56,w*.34*ik,h*.28,6);c.fill();c.fillStyle="rgba(255,255,255,.85)";c.beginPath();c.arc(w*.07+w*.17*ik,h*.7,h*.07*ik,0,7);c.fill()}
+  var ask=u>2.4&&u<4.6,ok=u>4;if(ask){var ak=E.back(seg(u,2.4,2.8));c.save();c.translate(w*.5,h*.5);c.scale(ak,ak);card(c,-w*.19,-h*.16,w*.38,h*.32,10,C.c3);tx(c,"この内容で",0,-h*.07,sans(Math.max(8,h*.046)),"#0c0d12","center");tx(c,"投稿しますか？",0,-h*.005,sans(Math.max(8,h*.046)),"#0c0d12","center");
+    c.fillStyle=ok?C.c4:C.ink;rr(c,-w*.08,h*.045,w*.16,h*.08,h*.04);c.fill();tx(c,"OK",0,h*.087,sans(Math.max(8,h*.044)),"#fff","center");c.restore()}
+  var px=w*.62,py=h*.06,pw=w*.32,ph=h*.88;c.fillStyle=C.ink;rr(c,px,py,pw,ph,16);c.fill();c.fillStyle=C.bg;rr(c,px+5,py+5,pw-10,ph-10,12);c.fill();
+  c.save();rr(c,px+5,py+5,pw-10,ph-10,12);c.clip();var pk=E.out(seg(u,4.6,5.3)),oy=lerp(-ph*.5,0,pk);
+  for(i=0;i<3;i++){var yy=py+12+i*ph*.46+oy+(i?ph*.02:0)+ (i===0?0:0);if(i===0&&pk<=0)continue;var hh=ph*.42;c.fillStyle=C.sur;rr(c,px+10,yy,pw-20,hh,6);c.fill();c.fillStyle=i===0?C.pal[a?a.ci%5:0]:C.line;rr(c,px+14,yy+4,pw-28,hh*(ig?.7:.42),4);c.fill();c.fillStyle=C.line;c.fillRect(px+14,yy+hh*(ig?.78:.54),(pw-28)*.8,hh*.06);if(!ig)c.fillRect(px+14,yy+hh*.66,(pw-28)*.5,hh*.06)}
+  c.restore();if(u>5.4){var n=Math.round(128*E.out(seg(u,5.4,7.4)));c.fillStyle=C.c2;c.beginPath();c.arc(px+pw*.2,py+ph*.9,5+2*Math.abs(Math.sin(t*6)),0,7);c.fill();tx(c,String(n),px+pw*.3,py+ph*.905,mono(Math.max(8,h*.046)),C.ink)}
+};
+PV.img=function(c,w,h,t,st,dt,a){
+  bg(c,w,h);var u=t%7,i,j;card(c,w*.04,h*.14,w*.32,h*.72,10);c.fillStyle=C.c1;rr(c,w*.06,h*.2,w*.28,h*.3,8);c.fill();
+  ["青と白で、","ノートPCと","再生マーク"].forEach(function(s,k){tx(c,typed(s,seg(u,k*.35,k*.35+.4)),w*.075,h*(.27+k*.08),sans(Math.max(8,h*.046)),"#fff")});
+  tx(c,a&&a.id==="ci"?"Claude → Codex":a&&a.id==="gn"?"Claude → Gemini":"スタイルを指定",w*.06,h*.62,sans(Math.max(7,h*.038)),C.mut);
+  for(i=0;i<3;i++){var x=w*(.41+i*.195),y=h*.14+(i===1?h*.04:0),ww=w*.175,hh=h*.68;c.fillStyle=C.ink;rr(c,x+3,y+3,ww,hh,6);c.fill();c.save();rr(c,x,y,ww,hh,6);c.clip();
+    c.fillStyle=[C.c1,C.c3,C.c5][i];c.fillRect(x,y,ww,hh);c.fillStyle="rgba(255,255,255,.9)";rr(c,x+ww*.16,y+hh*.36,ww*.68,hh*.3,4);c.fill();c.fillStyle=[C.c3,C.c2,C.c4][i];c.beginPath();c.arc(x+ww*.72,y+hh*.2,ww*.16,0,7);c.fill();c.fillStyle=C.ink;tri(c,x+ww*.5,y+hh*.51,ww*.1);c.fillRect(x+ww*.1,y+hh*.7,ww*.8,hh*.04);
+    var cols=6,rows=9,cw=ww/cols,ch=hh/rows;for(j=0;j<cols*rows;j++){var th=1.2+i*.5+hs(j+i*77)*2.2;if(u<th){c.fillStyle=(j+Math.floor(j/cols))%2?C.sur:C.line;c.fillRect(x+(j%cols)*cw,y+Math.floor(j/cols)*ch,cw+1,ch+1)}}
+    c.restore();c.strokeStyle=C.ink;c.lineWidth=2;rr(c,x,y,ww,hh,6);c.stroke()}
+  if(u>5.2){var k=E.back(seg(u,5.2,5.6));c.save();c.translate(w*.7,h*.92);c.scale(k,k);c.fillStyle=C.c4;rr(c,-w*.14,-h*.05,w*.28,h*.1,h*.05);c.fill();tx(c,"3枚できました",0,1,sans(Math.max(8,h*.042)),"#fff","center");c.restore()}
+};
+PV.article=function(c,w,h,t){
+  bg(c,w,h);var u=t%7,i,x=w*.1,y=h*.07,ww=w*.8,hh=h*.86;card(c,x,y,ww,hh,10);c.fillStyle=C.sur;c.fillRect(x+2,y+2,ww-4,hh*.11);tx(c,"記事の編集画面（イメージ）",x+12,y+hh*.06,sans(Math.max(7,h*.038)),C.mut);
+  tx(c,typed("AI動画の始め方、3つの手順",seg(u,.2,1.4)),x+16,y+hh*.22,disp(Math.max(11,h*.075)),C.ink);
+  var ik=E.back(seg(u,1.5,2));if(ik>0){c.fillStyle=C.c1;rr(c,x+16,y+hh*.31,(ww-32)*ik,hh*.2,6);c.fill()}
+  for(i=0;i<5;i++){c.fillStyle=C.line;rr(c,x+16,y+hh*(.57+i*.065),(ww-32)*(i===4?.45:1)*E.out(seg(u,2.1+i*.3,2.6+i*.3)),hh*.035,3);c.fill()}
+  if(u>4.2){var k=E.back(seg(u,4.2,4.6));c.save();c.translate(x+ww-70,y+hh*.9);c.scale(k,k);c.fillStyle=C.c3;rr(c,-62,-15,124,30,15);c.fill();c.strokeStyle=C.ink;c.lineWidth=2;c.stroke();tx(c,"下書きに保存",0,1,sans(12),"#0c0d12","center");c.restore();tx(c,"公開は自分の手で",x+16,y+hh*.92,sans(Math.max(8,h*.042)),C.c2)}
+};
+
+/* canvas manager */
+var CV=[],started=false;
+var io=("IntersectionObserver" in window)?new IntersectionObserver(function(es){es.forEach(function(e){CV.forEach(function(it){if(it.el===e.target)it.vis=e.isIntersecting})})},{rootMargin:"80px"}):null;
+function regAll(){$$("canvas[data-pv]").forEach(function(el){if(el._pv)return;el._pv=1;var it={el:el,fn:PV[el.dataset.pv],vis:false,st:{},a:byId[el.dataset.app]};CV.push(it);if(io)io.observe(el)})}
+function drawOne(it,t,dt){if(!it.fn)return;var el=it.el,w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;var d=Math.min(2,window.devicePixelRatio||1);
+  if(el.width!==Math.round(w*d)||el.height!==Math.round(h*d)){el.width=Math.round(w*d);el.height=Math.round(h*d)}
+  var c=el.getContext("2d");c.setTransform(d,0,0,d,0,0);c.globalAlpha=1;c.textAlign="left";c.setLineDash([]);
+  try{it.fn(c,w,h,t,it.st,dt,it.a)}catch(e){if(!it.err){it.err=1;console.error("pv "+el.dataset.pv+" "+e.message)}}}
+var last=0;
+function loop(ts){var t=ts/1000,dt=Math.min(.1,t-last);last=t;CV.forEach(function(it){if(it.vis||!io)drawOne(it,t,dt)});requestAnimationFrame(loop)}
+function drawAllOnce(){if(!reduce&&started)return;CV.forEach(function(it){drawOne(it,3.3,.016)})}
+
+/* ---------- apps ---------- */
+var CAT={video:"動画・音楽・声",design:"デザイン・資料",edit:"動画編集",sns:"発信・投稿",ai:"他のAIとつなぐ",ops:"ネタ帳"};
+var G="各アプリのアカウント。プランによって使える範囲が変わります";
+var S=[
+{id:"hg",name:"Higgsfield",cat:"video",how:"url",url:"https://mcp.higgsfield.ai/mcp",hot:1,pv:"gen",link:"https://higgsfield.ai",
+ one:"チャットだけでAI動画と画像を生成。30以上のモデルを1接続で",
+ desc:"Kling、Veo、Seedanceなど複数の動画・画像AIを、Claudeの会話から呼び出せます。どのモデルを使うかもClaudeに任せられるので、サイトを行き来する手間がなくなります。",
+ pow:["APIキー不要。ログインするだけで接続","同じキャラクターで複数カットを作れる","商品URLから広告風の動画づくりも"],
+ prompt:"Higgsfieldで、9:16・10秒の商品紹介動画を作って。白背景で商品がゆっくり回転、最後に商品名を表示。",
+ need:"Higgsfieldの有料プラン。生成のたびにHiggsfield側のクレジットを消費します。",warn:"無料プランのClaudeでは、カスタムコネクタは1つまで。"},
+{id:"rw",name:"Runway",cat:"video",how:"url",url:"https://mcp.runwayml.com/mcp",hot:1,pv:"gen",link:"https://runwayml.com",
+ one:"映像の質で選ぶならこれ。映画のようなカットをチャットから",
+ desc:"映像品質に定評のある動画AI。自社のGen-4.5に加えて、Seedance、Kling、Veoなど他社モデルもプランに応じて呼び出せます。ナレーションと効果音の生成にも対応。",
+ pow:["質感重視の動画を会話で生成","他社の動画・画像モデルも呼び出せる","APIキー不要、ログインで接続"],
+ prompt:"Runwayで、夜の東京の街を歩く人の後ろ姿を、映画のような質感で5秒の動画にして。縦型で。",
+ need:"Runwayのアカウントとプラン。生成はRunway側のクレジットを消費します。",warn:""},
+{id:"kl",name:"Kling",cat:"video",how:"url",url:"https://kling.ai/mcp",hot:1,pv:"gen",link:"https://kling.ai",
+ one:"Klingを使っている人は、同じ契約のままチャットから生成",
+ desc:"人の動きの自然さで人気の動画AI。Kling公式の接続先で、いつものKlingと同じクレジットと契約をそのまま使えます。すでに課金している人なら追加の契約なし。",
+ pow:["Kling公式の接続先","Web版と同じクレジットを共有","画像から動画への変換にも対応"],
+ prompt:"Klingで、この画像の人物がゆっくり振り向く5秒の動画を作って。（画像を添付）",
+ need:"Klingのアカウントとクレジット。",warn:"Kling公式のガイドには、Claude用のプラグインをワンクリックで追加する方法も載っています。"},
+{id:"sn",name:"Suno",cat:"video",how:"url",url:"https://api.suno.com/mcp",hot:1,pv:"music",link:"https://suno.com/mcp",
+ one:"動画のBGMや主題歌を、チャットで頼んで作曲",
+ desc:"音楽生成AIの定番。2026年10月末に公式の接続先がベータ公開されました。作った曲はSunoのライブラリに保存され、リールのBGMやチャンネルのジングルづくりに使えます。",
+ pow:["雰囲気を伝えるだけで1曲完成","APIキー不要、Sunoのクレジットで生成","作った曲はSunoのライブラリに保存"],
+ prompt:"Sunoで、AI解説リール用のBGMを作って。明るくテンポよく、歌なし、30秒くらい。",
+ need:"Sunoのアカウント。生成はSunoプランのクレジットを消費します。",warn:"ベータ版のため、アカウントによってはまだ使えない場合があります。商用利用の条件はSunoのプランごとに異なります。"},
+{id:"hy",name:"HeyGen",cat:"video",how:"url",url:"https://mcp.heygen.com/mcp/v1/",hot:1,pv:"avatar",link:"https://www.heygen.com",
+ one:"自分の分身アバターが話す動画を、台本を渡すだけで",
+ desc:"アバターと声を選んで台本を渡すと、話す動画が完成します。動画の翻訳と口の動きの同期、声の複製にも対応。顔出しなしの解説動画づくりに向きます。",
+ pow:["台本から話す動画を自動で作成","翻訳して口の動きまで合わせる","APIキー不要、ログインで接続"],
+ prompt:"HeyGenで、私のアバターを使って30秒の解説動画を作って。台本は「AI動画の始め方を3つの手順で紹介」。縦型で。",
+ need:"Claudeの有料プラン。HeyGenはCreatorプラン以上が推奨。生成はHeyGen側のクレジットを消費します。",warn:"アバターや声の複製は、自分自身か、本人の同意があるものだけに。"},
+{id:"el",name:"ElevenLabs",cat:"video",how:"url",url:"https://api.elevenlabs.io/v1/mcp",pv:"voice",link:"https://elevenlabs.io",
+ one:"文章を自然な声に。声のデザインや文字起こしもチャットから",
+ desc:"ナレーションの読み上げ、声のデザイン、音声の文字起こしをClaudeから実行できます。一覧にあるコネクタは機能が絞られた版なので、全機能を使うならURLを貼る方法がおすすめ。",
+ pow:["台本をそのままナレーション音声に","好みの声をデザインして読み上げに使える","APIキー不要、ログインで接続"],
+ prompt:"ElevenLabsで、この台本を落ち着いた女性の声で読み上げた音声を作って。（ここに台本）",
+ need:"ElevenLabsのアカウント。生成はワークスペースのクレジットを消費します。",warn:"実在の人の声をまねる使い方は、本人の同意がある場合だけに。"},
+{id:"kr",name:"Krea",cat:"video",how:"dir",q:"Krea",pv:"img",link:"https://www.krea.ai",
+ one:"自分の画風を覚えさせて、世界観のそろった画像を量産",
+ desc:"画像と動画の生成サービス。自分で作ったスタイルを、Claude経由の生成にもそのまま引き継げます。アカウントの見た目を統一したい人に向いた接続先。",
+ pow:["登録したスタイルをClaudeからも使える","画像の高画質化に強い","無料で試せる日ごとの枠あり"],
+ prompt:"Kreaで、私のスタイルを使って、リール表紙用の縦長イラストを3枚作って。テーマは「AIと働く朝」。",
+ need:"Kreaのアカウント。",warn:"Claudeの一覧で見つからない場合は、Krea公式サイトの接続案内を確認してください。"},
+{id:"hf",name:"HyperFrames by HeyGen",cat:"video",how:"dir",q:"HyperFrames",pv:"hfm",link:"https://hyperframes.heygen.com",
+ one:"図解やモーション動画を、チャットから作って書き出す",
+ desc:"文字が動くスライドやモーショングラフィックスを組み立て、動画として書き出します。数字や図で説明する解説動画に向いた接続先。",
+ pow:["動くスライドと図解を自動で構成","動画ファイルへの書き出しまで対応","文字と図で見せる解説動画向き"],
+ prompt:"HyperFramesで、「AIで時短できる作業3選」を15秒のモーション動画にして。縦型、文字は大きめ。",need:G,warn:""},
+{id:"cv",name:"Canva",cat:"design",how:"dir",q:"Canva",hot:1,pv:"design",link:"https://www.canva.com",
+ one:"サムネ、投稿画像、資料をチャットから作って書き出す",
+ desc:"デザインの検索、新規作成、テンプレートへの流し込み、サイズ変更、書き出しまでをClaudeが実行。文章を作った流れのまま、画像まで仕上がります。",
+ pow:["文面を渡すとデザイン案を生成","1つのデザインを別サイズに展開","PNGやPDFへの書き出しまで"],
+ prompt:"Canvaで、「AI動画スキル図鑑を公開しました」という告知のInstagram投稿画像を作って。白地に青と黄色、文字は大きく。",need:G,warn:""},
+{id:"gm",name:"Gamma",cat:"design",how:"dir",q:"Gamma",pv:"slides",link:"https://gamma.app",
+ one:"スライド、特典資料、SNS用カードを構成から自動生成",
+ desc:"テーマや原稿を渡すと、デザイン済みのスライドや資料が出来上がります。セミナー資料、note購入特典のPDF、カルーセル投稿の下地づくりに便利。",
+ pow:["原稿からスライドを一気に生成","資料、SNS投稿、簡易サイトにも対応","テーマを選んで見た目を統一"],
+ prompt:"Gammaで、「AI動画の始め方」の10枚スライドを作って。初心者向け、図を多めに。",need:G,warn:""},
+{id:"ad",name:"Adobe",cat:"design",how:"dir",q:"Adobe",pv:"design",link:"https://www.adobe.com",
+ one:"Adobeのプロ用ツールで、デザインの作成・合成・編集",
+ desc:"Adobeの各ツールをClaudeから操作する接続先。デザインの作成や動きづけ、PDFの編集、素材の管理まで扱えます。すでにAdobeを契約している人向け。",
+ pow:["デザインに動きを付ける","PDFの編集や結合","素材フォルダの整理"],
+ prompt:"Adobeで、このロゴ画像を使った正方形の告知バナーを作って。",need:"Adobeのアカウント。使える機能は契約内容によります。",warn:""},
+{id:"ds",name:"Descript",cat:"edit",how:"dir",q:"Descript",pv:"edit",link:"https://www.descript.com",
+ one:"動画を文章のように編集。素材を渡して指示するだけ",
+ desc:"撮った動画を取り込み、言葉で編集を指示できます。言いよどみのカットや字幕づけなど、編集ソフトを開かずに進めたい人向け。",
+ pow:["素材を取り込んで、指示で編集","進み具合をチャットで確認","話す系の動画やポッドキャストに強い"],
+ prompt:"Descriptにこの動画を取り込んで、言いよどみを消して字幕を付けて。",need:G,warn:""},
+{id:"op",name:"OpusClip",cat:"edit",how:"dir",q:"OpusClip",pv:"clip",link:"https://www.opus.pro",
+ one:"長い動画から、字幕つきの切り抜きショートを作る",
+ desc:"一覧では「AI Producer by OpusClip」という名前。字幕づけ、話している人の画面合わせ、声の聞きやすさの調整までを会話で進められます。",
+ pow:["長尺からショート動画を切り出し","字幕と画面の向きを自動で調整","ライブ配信やセミナー録画の再利用に"],
+ prompt:"OpusClipで、この60分のセミナー動画から、縦型の切り抜きを3本作って。字幕つきで。",need:G,warn:""},
+{id:"xm",name:"X（公式MCP）",cat:"sns",how:"code",hot:1,pv:"post",link:"https://github.com/xdevplatform/xmcp",
+ one:"Xが公式公開した接続口。投稿も検索もClaude Codeから",
+ desc:"Xが公式にGitHubで公開している「xmcp」。Claude Codeに登録すると、投稿の作成、検索、自分のアカウント情報の取得などを会話で実行できます。note記事を書いたらXで告知、までを一続きに。",
+ pow:["X公式が公開している接続口","投稿の作成と検索を会話で","スキルと組み合わせて告知を自動化"],
+ setup:"https://github.com/xdevplatform/xmcp をセットアップして、Claude Codeに登録して。X Developerのキーが必要になったら、取得の手順を案内して。キーは画面に表示しないで。",
+ runs:["git clone https://github.com/xdevplatform/xmcp.git","（キーを設定して xmcp を起動）","claude mcp add --transport http xmcp http://127.0.0.1:8000/mcp"],
+ human:"X Developer（developer.x.com）でアプリを作成し、キーを発行して設定ファイルに貼り付けてください。貼り終えたら教えてください。",humanCap:"X Developerでキーを発行して、設定ファイルに貼る",humanTip:"ここだけは自分の手で行う作業。キーは他人に見せない、チャットにも貼らないのが安全。",
+ prompt:"「AI動画スキル図鑑を公開しました」という内容で、Xの投稿文を作って。内容を私に見せて、OKと言ったら投稿して。",reply:"投稿文の案です。この内容で投稿してよいですか？",
+ need:"Claude Code、X Developerのアカウント。XのAPIは利用量に応じた料金がかかります。",warn:"ブラウザ版のClaudeチャットでは使えません。投稿は必ず内容を確認してから。"},
+{id:"ig",name:"Instagram",cat:"sns",how:"dir",q:"Upload-Post",pv:"post",link:"https://www.upload-post.com",
+ one:"リール、カルーセル、ストーリーズをチャットから投稿",
+ desc:"Meta公式のClaude用コネクタは、まだありません。Instagramにつなぐには、公式APIを使った外部サービスのコネクタを経由します。投稿なら「Upload-Post」、フォロワー推移などの確認なら国内サービスの「エルグラム」が、Claudeの一覧に載っています。",
+ pow:["リールやカルーセルの投稿をチャットから","外部サービスがInstagramとの接続を管理","エルグラムはフォロワー推移などの分析向け"],
+ prompt:"Instagramに、この画像3枚をカルーセルで投稿する準備をして。キャプション案も作って、投稿前に私に確認して。",
+ need:"Instagramのプロアカウント（ビジネスまたはクリエイター）と、経由する外部サービスのアカウント。",warn:"Meta公式の接続口ではありません。外部サービスに自分のアカウントの操作を許可することになるため、料金と規約を確認してから。"},
+{id:"th",name:"Threads",cat:"sns",how:"url",url:"https://www.threadify.app/api/mcp/threadify",pv:"post",link:"https://www.threadify.app",
+ one:"Threadsの下書き、予約、投稿、返信をチャットから",
+ desc:"Threadsにも公式のClaude用コネクタはなく、Meta公式のThreads APIを使った外部サービスを経由します。ここでは一例として「Threadify」のURLを載せています。同様のサービスは複数あります。",
+ pow:["投稿の下書きと予約","連投や返信にも対応するサービスあり","公式のThreads APIを経由"],
+ prompt:"Threadsに、今週の投稿を3本、下書きで用意して。テーマは「AI動画の小ワザ」。投稿は私が確認してから。",
+ need:"経由する外部サービスのアカウント。多くは有料プランがあります。",warn:"Meta公式の接続口ではありません。外部サービスに投稿の権限を渡すことになるため、提供元、料金、規約を確認してから使ってください。"},
+{id:"nm",name:"note（自動投稿）",cat:"sns",how:"code",pv:"article",link:"https://github.com/nullponull/note-post-mcp",
+ one:"Claude Codeで書いた記事を、noteの下書きまで自動で",
+ desc:"有志が公開している、noteに記事を入れるための接続口。noteには外部から投稿できる公式の窓口がないため、裏側でブラウザを自動操作する仕組みです。話題性は高いものの、公式の機能ではありません。",
+ pow:["記事を下書きとして保存","タイトルと本文をまとめて入力","コピペの往復がなくなる"],
+ setup:"https://github.com/nullponull/note-post-mcp の説明を読んで、セットアップの手順を案内して。ログインが必要な所は私が操作する。",
+ runs:["（リポジトリの説明に沿ってセットアップ）","npx note-post-mcp-login"],
+ human:"noteのログイン画面が開きます。ご自身でログインしてください。",humanCap:"noteへのログインは自分で行う",humanTip:"パスワードをチャットに貼らないこと。ログイン操作は必ず自分の手で。",
+ prompt:"この原稿を、noteに下書きとして保存して。公開はしないで。",reply:"下書きとして保存しました。公開はしていません。",
+ need:"Claude Code、noteのアカウント。",warn:"note公式の機能ではありません。自動操作は規約に触れる可能性があり、仕様変更で突然動かなくなることもあります。使うなら下書き保存までにとどめ、公開は自分の手で。"},
+{id:"nt",name:"Notion",cat:"ops",how:"dir",q:"Notion",hot:1,pv:"db",link:"https://www.notion.com",
+ one:"ネタ帳、台本、販売管理。Claudeが直接読み書き",
+ desc:"Notionのページやデータベースを、Claudeが検索・作成・更新します。ネタ帳から台本を作り、出来た台本をまたNotionに保存する、という往復がチャットだけで完結。",
+ pow:["過去のネタや原稿を検索して活用","台本や記事をページとして保存","管理表の状態を更新"],
+ prompt:"Notionのネタ帳から、まだ使っていないネタを3つ選んで、リール台本にして同じデータベースに保存して。",need:G,warn:""},
+{id:"ci",name:"Codexで画像生成",cat:"ai",how:"code",hot:1,pv:"img",link:"https://developers.openai.com/codex",
+ one:"Claude Codeから、ChatGPTの画像生成を呼び出す",
+ desc:"Claudeは画像を作れませんが、Codexには画像生成が組み込まれています。Claude CodeからCodexを呼び出せば、ChatGPTの契約の枠のまま、APIキーなしで画像を作れます。記事のアイキャッチや図解づくりに。",
+ pow:["APIキーの追加なしで画像を生成","記事を書いた流れで、そのまま画像まで","特別な連携設定は不要"],
+ setup:"Codexが入っていて、ログイン済みか確認して。まだなら npm install -g @openai/codex と codex login を実行して。",
+ runs:["codex login status","codex exec -C \"$(pwd)\" -s workspace-write --skip-git-repo-check '$imagegen （作りたい画像の説明）'"],
+ human:"ブラウザが開いたら、ChatGPTのアカウントでログインしてください。",humanCap:"初回だけ、ChatGPTのアカウントでログイン",humanTip:"一度ログインすれば、次からは不要。",
+ prompt:"この記事のアイキャッチ画像を、Codexの画像生成で1枚作って。青と白を基調に、ノートパソコンと動画の再生マークを入れて。16:9で、このフォルダに保存して。",reply:"Codexで画像を生成して、フォルダに保存しました。",resCard:"画像",
+ need:"Claude Code、Codex CLI、ChatGPTの有料プラン（Plus以上）。",warn:"ブラウザ版のClaudeチャットでは使えません。Claude Code専用の方法です。"},
+{id:"cx",name:"Codex（相談・レビュー）",cat:"ai",how:"code",hot:1,pv:"duo",link:"https://developers.openai.com/codex",
+ one:"Claude CodeにCodexを登録して、AI同士で相談とレビュー",
+ desc:"OpenAIのAI「Codex」を、Claude Codeの道具として登録します。Claudeが作ったものをCodexに見直させる、意見が割れた所を比べる、といった使い方が話題。サイトやツールを作る人の品質チェックに。",
+ pow:["2つのAIの意見を比べられる","Claudeが必要な時だけCodexを呼ぶ","登録はコマンド1行"],
+ setup:"次のコマンドを順番に実行して、CodexをClaude Codeに登録して。ログイン画面が出たら教えて。\nnpm install -g @openai/codex\ncodex login\nclaude mcp add --transport stdio --scope user codex -- codex mcp-server",
+ runs:["npm install -g @openai/codex","codex login","claude mcp add --transport stdio --scope user codex -- codex mcp-server","claude mcp list"],
+ human:"ブラウザが開いたら、ChatGPTのアカウントでログインしてください。",humanCap:"ChatGPTのアカウントでログイン",humanTip:"ログインが終わると、Claude Codeが続きを進めます。",
+ prompt:"このページの文章と構成を、Codexにもレビューさせて。Claudeと意見が違う所だけ、表にまとめて。",reply:"Codexにレビューを依頼しました。\n意見が分かれたのは2か所です。表にまとめます。",
+ need:"Claude Code、Codex CLI、ChatGPTのアカウント。",warn:"ブラウザ版のClaudeチャットでは使えません。Claude Code専用の方法です。"},
+{id:"gn",name:"Gemini（Nano Banana）",cat:"ai",how:"code",pv:"img",link:"https://aistudio.google.com",
+ one:"Googleの画像AI「Nano Banana」を、Claude Codeから呼び出す",
+ desc:"文字入りの画像や写真の編集に強いGoogleの画像モデルを、Claude Codeの道具として追加します。有志が公開している接続口を使う方法で、GoogleのAPIキーが必要。Codexでの画像生成より準備が1つ多めです。",
+ pow:["文字入り画像や写真の編集に強い","画像の生成と編集を会話で","Claude Codeの作業中にその場で作れる"],
+ setup:"Nano BananaのMCPをClaude Codeに追加して。Gemini APIキーは私が入力するので、入力する場所を教えて。\nclaude mcp add nano-banana npx nano-banana-mcp -e GEMINI_API_KEY=ここにキー",
+ runs:["claude mcp add nano-banana npx nano-banana-mcp -e GEMINI_API_KEY=（自分のキー）","claude mcp list"],
+ human:"Google AI Studioで「Get API key」からキーを発行し、コマンドの「ここにキー」の部分に入れてください。",humanCap:"Google AI StudioでAPIキーを発行して入力",humanTip:"キーは他人に見せないこと。画像の生成には、枚数に応じた料金がかかります。",
+ prompt:"Nano Bananaで、「AI動画スキル図鑑」という文字が入ったYouTubeサムネを1枚作って。黄色と黒で目立つように。",reply:"Nano Bananaで画像を生成しました。",resCard:"画像",
+ need:"Claude Code、Googleのアカウント、Gemini APIキー。画像1枚ごとに料金がかかります。",warn:"有志が公開している接続口で、Google公式のものではありません。ブラウザ版のClaudeチャットでは使えません。"}
+];
+var COST={hg:["月9ドル〜",0],rw:["月35ドル〜",0],kl:["無料枠あり・月約10ドル〜",1],sn:["無料でも可・商用は月10ドル〜",1],hy:["月29ドル〜＋Claude有料",0],el:["無料枠あり・商用は月6ドル〜",1],kr:["無料枠あり",1],hf:["アプリのプランによる",0],cv:["アプリのプランによる",0],gm:["アプリのプランによる",0],ad:["Adobeの契約による",0],ds:["アプリのプランによる",0],op:["アプリのプランによる",0],xm:["投稿1件 約2円〜",0],ig:["外部サービスの料金による",0],th:["外部サービスの料金による",0],nm:["追加料金なし",1],nt:["アプリのプランによる",0],ci:["ChatGPT有料プランの枠内",0],cx:["ChatGPTの契約内",0],gn:["画像1枚 約5〜20円",0]};
+var LV={dir:["かんたん","e1"],url:["ふつう","e2"],code:["上級","e3"]};
+var byId={};S.forEach(function(s,i){byId[s.id]=s;s.ci=i;s.catL=CAT[s.cat];s.cost=COST[s.id][0];s.free=COST[s.id][1]});
+$("#mq").innerHTML=(function(){var a=S.map(function(s){return "<span>"+esc(s.name)+"</span>"}).join("");return a+a})();
+var HOWL={dir:"一覧から選ぶ",url:"URLを貼る",code:"Claude Codeに貼る"};
+
+function cardHTML(s){
+  var how="";
+  if(s.how==="dir")how='<div class="easy"><div class="eh">つなぎ方　一覧から選ぶだけ</div><div class="eb"><p style="font-size:14px">Claudeの「カスタマイズ → コネクタ」で <b>'+esc(s.q)+'</b> を検索して「接続」。</p><div class="ea"><button class="btn sm yl" type="button" data-copy="'+esc(s.q)+'">検索する名前をコピー</button><button class="btn sm" type="button" data-demo="'+s.id+'">▶ つなぎ方を見る</button></div></div></div>';
+  if(s.how==="url")how='<div class="easy"><div class="eh">つなぎ方　このURLを貼るだけ</div><div class="eb"><div class="urlrow"><code>'+esc(s.url)+'</code><button class="btn sm" type="button" data-copy="'+esc(s.url)+'">コピー</button></div><p class="small">「カスタマイズ → コネクタ → 追加 → カスタムコネクタを追加」に貼り付け。</p><div class="ea"><button class="btn sm" type="button" data-demo="'+s.id+'">▶ つなぎ方を見る</button></div></div></div>';
+  if(s.how==="code")how='<div class="easy"><div class="eh">つなぎ方　Claude Codeにこの文を貼るだけ</div><div class="eb"><div class="txt">'+esc(s.setup)+'</div><div class="ea"><button class="btn sm yl" type="button" data-copy="'+esc(s.setup)+'">この文をコピー</button><button class="btn sm" type="button" data-demo="'+s.id+'">▶ つなぎ方を見る</button></div><p class="small">Claude Codeのチャットに貼って送信。コマンドはClaude Codeが代わりに実行します。</p><details><summary>裏で実行されるコマンド</summary><div class="in">'+s.runs.map(function(c){return '<div class="urlrow"><code>'+esc(c)+'</code><button class="btn sm" type="button" data-copy="'+esc(c)+'">コピー</button></div>'}).join("")+'</div></details></div></div>';
+  return '<article class="card" id="s-'+s.id+'" data-cat="'+s.cat+'" data-tags="'+s.cat+' '+s.how+(s.hot?" hot":"")+(s.free?" free":"")+'">'+
+   '<div class="hd"><div class="ico">'+esc(s.name.charAt(0))+'</div><div><h3>'+esc(s.name)+'</h3><div class="tags"><span class="catp">'+s.catL+'</span><span class="lv '+LV[s.how][1]+'">'+LV[s.how][0]+'</span><span class="howp">'+HOWL[s.how]+'</span><span class="costp">'+esc(s.cost)+'</span>'+(s.hot?'<span class="hot">SNSで話題</span>':'')+'</div></div></div>'+
+   '<canvas class="pvc" data-pv="'+s.pv+'" data-app="'+s.id+'" aria-hidden="true"></canvas>'+
+   '<div class="bd"><p class="one">'+esc(s.one)+'</p><p class="desc">'+esc(s.desc)+'</p>'+
+   '<ul class="pow">'+s.pow.map(function(c){return '<li>'+esc(c)+'</li>'}).join("")+'</ul>'+how+
+   '<div><div class="lbl">つないだ後の頼み方</div><div class="prm"><span>'+esc(s.prompt)+'</span><button class="btn sm" type="button" data-copy="'+esc(s.prompt)+'">コピー</button></div></div>'+
+   '<details><summary>必要なものと注意点</summary><div class="in"><p class="small"><b>必要なもの</b>　'+esc(s.need)+'</p>'+(s.warn?'<div class="caution"><b>注意</b>　'+esc(s.warn)+'</div>':'')+'</div></details>'+
+   '<div class="ft"><a class="btn sm pri" href="'+s.link+'" target="_blank" rel="noopener">公式サイトを開く ↗</a></div></div></article>';
+}
+$("#cards").innerHTML=S.map(cardHTML).join("");
+
+var F=[["all","すべて"],["hot","SNSで話題"]].concat(Object.keys(CAT).map(function(k){return [k,CAT[k]]})).concat([["free","無料で試せる"],["dir","かんたん"],["url","URLを貼る方式"]]);
+$("#filters").innerHTML=F.map(function(f,i){return '<button class="chip" type="button" data-f="'+f[0]+'" aria-pressed="'+(i===0)+'">'+f[1]+'</button>'}).join("");
+$("#filters").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;$$("#filters .chip").forEach(function(c){c.setAttribute("aria-pressed",c===b)});
+  var f=b.dataset.f,n=0;$$("#cards .card").forEach(function(c){var ok=f==="all"||c.dataset.tags.split(" ").indexOf(f)>=0;c.hidden=!ok;if(ok)n++});$("#noHit").hidden=n>0;drawAllOnce()});
+function jump(id){$$("#filters .chip").forEach(function(c,i){c.setAttribute("aria-pressed",i===0)});$$("#cards .card").forEach(function(c){c.hidden=false});
+  var el=$("#s-"+id);if(!el)return;el.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});el.classList.add("flash");setTimeout(function(){el.classList.remove("flash")},1600)}
+document.addEventListener("click",function(e){var a=e.target.closest("[data-jump]");if(a){e.preventDefault();jump(a.dataset.jump)}});
+
+/* recipes */
+var RC=[
+ {t:"ネタ1つから、リール1本が完成",ids:["nt","hg","sn","cv"],d:"台本、動画、BGM、表紙画像。4つの作業が、1回頼むだけで終わります。",p:"Notionのネタ帳から未使用のネタを1つ選んで、15秒のリール台本にして。その台本でHiggsfieldの縦型動画を作り、SunoでBGMを付けて、Canvaで表紙画像も作って。"},
+ {t:"撮影なしで、話す動画ができる",ids:["el","hy","op"],d:"台本を渡すだけ。ナレーション、アバター動画、切り抜き2本までそろいます。",p:"この台本をElevenLabsでナレーション音声にして。同じ台本でHeyGenのアバター動画も作って。できた動画から、OpusClipで縦型の切り抜きを2本作って。（ここに台本）"},
+ {t:"note記事が、画像つきで下書きに入る",ids:["ci","nm","xm"],d:"記事、アイキャッチ画像、Xの告知文まで用意。あとは読んで公開するだけ。",p:"この内容でnote記事を書いて。Codexでアイキャッチ画像を1枚作り、記事はnoteに下書きで保存して。最後にXの告知文を作って私に見せて。公開と投稿は私がOKと言ってから。"},
+ {t:"見た目のそろったInstagram投稿",ids:["kr","cv","ig"],d:"同じ画風の画像3枚が、カルーセル投稿の形になって届きます。",p:"Kreaで、私のスタイルの画像を3枚作って。その画像を使って、Canvaでカルーセル用のデザインに仕上げて。Instagramへの投稿準備をして、キャプション案と一緒に私に確認して。"}
+];
+$("#rcp").innerHTML=RC.map(function(r){return '<div class="box sh"><h3>'+esc(r.t)+'</h3><div class="chain">'+r.ids.map(function(id,i){return (i?'<i>→</i>':'')+'<a href="#s-'+id+'" data-jump="'+id+'">'+esc(byId[id].name)+'</a>'}).join("")+'</div><p style="font-size:15px;font-weight:700">'+esc(r.d)+'</p><div class="lbl">この文をコピーして送る</div><div class="prm"><span>'+esc(r.p)+'</span><button class="btn sm" type="button" data-copy="'+esc(r.p)+'">コピー</button></div></div>'}).join("");
+
+/* picker */
+var goals=[["reel","リールやショートを量産",["hg","sn","cv"]],["face","顔出しなしで解説動画",["hy","el","op"]],["note","noteを書いて告知する",["ci","nm","xm"]],["cine","映像の質にこだわる",["rw","kl","sn"]],["insta","Instagramを伸ばす",["cv","kr","ig"]],["neta","ネタ管理から始める",["nt","gm","cv"]]];
+var WHY={hg:"動画と画像をチャットから生成",sn:"BGMを作曲",cv:"表紙やサムネを作って書き出し",hy:"アバターが話す動画を作成",el:"ナレーション音声を用意",op:"長い動画をショートに",ci:"アイキャッチ画像を生成",nm:"noteの下書きに保存",xm:"Xで告知",rw:"質感の高い映像を生成",kl:"人物の動きが自然な動画",kr:"同じ画風の画像を量産",ig:"リールやカルーセルを投稿",nt:"ネタと原稿の置き場",gm:"特典や資料を自動で作成"};
+var pick="reel";
+function paintPick(){$("#qGoal").innerHTML=goals.map(function(g){return '<button class="chip" type="button" data-v="'+g[0]+'" aria-pressed="'+(pick===g[0])+'">'+g[1]+'</button>'}).join("");
+  var g=goals.filter(function(x){return x[0]===pick})[0];
+  $("#pickRes").innerHTML='<h3>最初につなぐ3つ</h3><ol>'+g[2].map(function(id){return '<li><a href="#s-'+id+'" data-jump="'+id+'"><b>'+esc(byId[id].name)+'</b></a>　'+WHY[id]+'</li>'}).join("")+'</ol><p class="small">まず1つ目だけつないで試し、慣れてから増やすのがおすすめ。</p>'}
+$("#qGoal").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;pick=b.dataset.v;paintPick()});paintPick();
+
+/* checklist */
+var TD=["つなぎたいアプリを1つ決める（迷ったらCanvaかHiggsfield）","そのアプリのアカウントにログインできるか確認","実演どおりに、Claudeのコネクタ設定からつなぐ","チャットの＋でオンになっているか確認し、カードの「頼み方」を送る","結果を確認できたら、2つ目をつないで組み合わせを試す"];
+var done={};try{done=JSON.parse(store("rnk-todo")||"{}")||{}}catch(e){done={}}
+$("#todo").innerHTML=TD.map(function(t,i){return '<li><label for="td'+i+'"><input type="checkbox" id="td'+i+'" data-i="'+i+'"'+(done[i]?" checked":"")+'><span>'+esc(t)+'</span></label></li>'}).join("");
+function paintProg(){var n=$$("#todo input:checked").length;$("#progBar").style.width=(n/TD.length*100)+"%";$("#progTxt").textContent=n+" / "+TD.length+" 完了"+(n===TD.length?"。おつかれさまでした":"")}
+$("#todo").addEventListener("change",function(e){var i=e.target.dataset.i;if(i===undefined)return;done[i]=e.target.checked;store("rnk-todo",JSON.stringify(done));paintProg()});paintProg();
+
+/* ---------- demo player ---------- */
+var METHODS=[{k:"dir",t:"一覧から選ぶ",s:"Canva、Notionなど。検索して接続を押すだけ",ex:["cv","nt","kr","ig"]},{k:"url",t:"URLを貼る",s:"Higgsfield、Runway、Kling、Sunoなど",ex:["hg","rw","kl","sn","hy","el"]},{k:"code",t:"Claude Codeに貼る",s:"X公式MCP、Codex、Geminiなど",ex:["ci","cx","xm","gn"]}];
+var RES={video:"できました",design:"デザインができました",edit:"編集しました",sns:"準備ができました。投稿前に内容を確認してください",ops:"保存しました",ai:""};
+function stepsFor(a){
+  var nm=a.name,row={n:nm,d:a.one.slice(0,22)+"…",c:a.ci};
+  var chat5={scr:"Chat",cur:"#pTog",pop:1,app:a,cap:"チャットの＋を押し、"+nm+"がオンになっているか確認",tip:"オフのままだとClaudeは使えません。使わない時はオフにしておけば誤作動を防げます。"};
+  var ask={scr:"Chat",cur:"#chatIn",app:a,input:a.prompt,typeIn:1,cap:"ふつうに頼む。アプリ名を入れると確実",tip:"カードにある「頼み方」をそのまま貼ればOK。"};
+  var fin={scr:"Chat",app:a,chat:[{w:"u",t:a.prompt},{w:"a",t:RES[a.cat]+"。",card:nm}],cap:"結果がチャットに戻ってくる",tip:"結果は"+nm+"側にも保存されます。直したい所は続けて伝えるだけ。"};
+  if(a.how==="dir")return [
+   {scr:"Set",cur:"#sNavK",set:{rows:[]},cap:"Claudeの左メニューで「カスタマイズ」→「コネクタ」を開く",tip:"画面によっては「設定」→「コネクタ」と表示されます。探す言葉は「コネクタ」。"},
+   {scr:"Set",cur:"#cSearch",set:{q:a.q,typeQ:1,rows:[row]},cap:"検索欄に「"+a.q+"」と入力",tip:"名前の一部を入れるだけで候補が出ます。"},
+   {scr:"Set",cur:"#cConn",set:{q:a.q,rows:[row]},cap:"出てきた"+nm+"の「接続」を押す",tip:"ここでアプリ側のログイン画面に切り替わります。"},
+   {scr:"Auth",cur:"#aOk",app:a,cap:nm+"にログインして「許可する」を押す",tip:"パスワードはClaudeに渡りません。何を許可するのかを読んでから進みます。"},
+   chat5,ask,fin];
+  if(a.how==="url")return [
+   {scr:"Set",cur:"#sNavK",set:{rows:[]},cap:"Claudeの左メニューで「カスタマイズ」→「コネクタ」を開く",tip:"画面によっては「設定」→「コネクタ」と表示されます。"},
+   {scr:"Set",cur:"#cCustom",set:{rows:[],menu:1},cap:"「＋追加」→「カスタムコネクタを追加」を選ぶ",tip:"一覧にないアプリを自分で足すための入口。"},
+   {scr:"Set",cur:"#mUrl",set:{rows:[],modal:{name:nm,url:a.url,typeUrl:1}},cap:"名前に「"+nm+"」、URL欄にコピーしたURLを貼り付け",tip:"URLはカードの「コピー」ボタンで取れます。1文字でも違うとつながりません。"},
+   {scr:"Set",cur:"#mAdd",set:{rows:[],modal:{name:nm,url:a.url}},cap:"「追加」を押す",tip:"このあと、アプリ側のログイン画面が開きます。"},
+   {scr:"Auth",cur:"#aOk",app:a,cap:nm+"にログインして「許可する」を押す",tip:"APIキーの発行は不要。ログインして許可するだけ。"},
+   ask,fin];
+  var cc="Claude Code（イメージ）";
+  return [
+   {scr:"Chat",title:cc,app:a,nopl:1,cur:"#chatIn",input:a.setup,typeIn:1,cap:"Claude Codeのチャットに、カードの文を貼り付けて送信",tip:"コマンドの意味は分からなくて大丈夫。Claude Codeが代わりに実行します。"},
+   {scr:"Term",title:"Claude Codeが裏で実行（イメージ）",term:a.runs.map(function(c){return {p:1,t:c}}).concat([{t:"完了"}]),cap:"Claude Codeが、必要なコマンドを順番に実行",tip:"途中で許可を求められたら、内容を読んでから承認。"},
+   {scr:"Chat",title:cc,app:a,nopl:1,chat:[{w:"a",t:a.human}],typeLast:1,cap:a.humanCap,tip:a.humanTip},
+   {scr:"Chat",title:cc,app:a,nopl:1,cur:"#chatIn",input:a.prompt,typeIn:1,cap:"準備ができたら、ふつうに頼む",tip:"カードの「頼み方」をそのまま貼ればOK。"},
+   {scr:"Chat",title:cc,app:a,nopl:1,chat:[{w:"u",t:a.prompt},{w:"a",t:a.reply,card:a.resCard}],cap:"結果が返ってくる",tip:"投稿や公開のような操作は、内容を確認してから進めます。"}];
+}
+var mi=0,app=byId.cv,steps=[],si=0,playing=false,timer=null,typeT=null;
+$("#demoTabs").innerHTML=METHODS.map(function(d,i){return '<button class="tab" role="tab" type="button" aria-selected="'+(i===0)+'" data-i="'+i+'"><i>方法 '+(i+1)+'</i>'+d.t+'<small>'+d.s+'</small></button>'}).join("");
+function paintEx(){var m=METHODS[mi];$("#exs").innerHTML='<b>例にするアプリ</b>'+m.ex.map(function(id){return '<button class="chip" type="button" data-ex="'+id+'" aria-pressed="'+(app.id===id)+'">'+esc(byId[id].name)+'</button>'}).join("")+(m.ex.indexOf(app.id)<0?'<button class="chip" type="button" aria-pressed="true">'+esc(app.name)+'</button>':'');
+  $$("#demoTabs .tab").forEach(function(t,i){t.setAttribute("aria-selected",i===mi)})}
+function setDemo(id,play){app=byId[id];mi=app.how==="dir"?0:app.how==="url"?1:2;steps=stepsFor(app);si=0;playing=!!play&&!reduce;paintEx();show()}
+function stopType(){if(typeT){clearInterval(typeT);typeT=null}}
+function typeInto(el,text){stopType();if(reduce||!playing){el.textContent=text;return 0}
+  el.textContent="";el.classList.add("caret");var i=0;typeT=setInterval(function(){i+=2;el.textContent=text.slice(0,i);if(i>=text.length){stopType();el.classList.remove("caret")}},30);return text.length/2*30}
+function moveCur(sel){var c=$("#cur"),st=$("#stage");if(!sel){c.style.opacity=0;return}var el=$(sel);if(!el||!el.offsetParent){c.style.opacity=0;return}c.style.opacity=1;
+  var a=st.getBoundingClientRect(),b=el.getBoundingClientRect();c.style.transform="translate("+(b.left-a.left+Math.min(b.width*.5,60))+"px,"+(b.top-a.top+b.height*.5)+"px)";
+  $$(".hl",st).forEach(function(x){x.classList.remove("hl")});el.classList.add("hl");c.classList.remove("click");setTimeout(function(){c.classList.add("click")},720)}
+function paintList(){$("#stepList").innerHTML=steps.map(function(s,i){return '<li class="'+(i===si?"on":i<si?"done":"")+'"><button type="button" data-s="'+i+'"><span class="no">'+(i<si?"✓":i+1)+'</span><span>'+esc(s.cap)+'<span class="tp">'+esc(s.tip)+'</span></span></button></li>'}).join("")}
+function show(){
+  clearTimeout(timer);stopType();var s=steps[si],extra=0,a=s.app||app;
+  ["Set","Auth","Chat","Term"].forEach(function(n){$("#scr"+n).classList.toggle("on",n===s.scr)});
+  $$(".hl",$("#stage")).forEach(function(x){x.classList.remove("hl")});$$(".caret",$("#stage")).forEach(function(x){x.classList.remove("caret")});
+  if(s.scr==="Set"){var z=s.set||{};$("#cMenu").style.display=z.menu?"block":"none";
+    var q=$("#cSearch");if(z.q){if(z.typeQ)extra=typeInto(q,z.q);else q.textContent=z.q}else q.textContent="";
+    $("#cList").innerHTML=(z.rows||[]).map(function(r){return '<div class="crow" id="cRow"><div class="ci" style="background:var(--c'+(r.c%5+1)+')">'+esc(r.n.charAt(0))+'</div><div><div class="cn">'+esc(r.n)+'</div><div class="cd">'+esc(r.d)+'</div></div><div class="cb'+(r.ok?" ok":"")+'" id="cConn">'+(r.ok?"接続済み":"接続")+'</div></div>'}).join("")||'<p class="small">つないだコネクタがここに並びます。</p>';
+    var m=$("#cModal");if(z.modal){m.style.display="grid";$("#mName").textContent=z.modal.name;if(z.modal.typeUrl)extra=typeInto($("#mUrl"),z.modal.url);else $("#mUrl").textContent=z.modal.url}else m.style.display="none"}
+  if(s.scr==="Auth"){$("#aIco").textContent=a.name.charAt(0);$("#aIco").style.background="var(--c"+(a.ci%5+1)+")";$("#aHead").textContent="Claude が "+a.name+" へのアクセスを求めています";$("#aTitle").textContent=a.name+" の許可画面（イメージ）"}
+  if(s.scr==="Chat"){$("#chatTitle").textContent=s.title||"Claude のチャット（イメージ）";$("#pPlus").style.display=s.nopl?"none":"grid";$("#pPlus").parentNode.style.gridTemplateColumns=s.nopl?"1fr":"auto 1fr";$("#pPop").style.display=s.pop?"block":"none";$("#pName").textContent=a.name;
+    var log=$("#chatLog");log.innerHTML="";(s.chat||[]).forEach(function(mm,i){var d=document.createElement("div");d.className="msg "+mm.w;var sp=document.createElement("span");d.appendChild(sp);
+      if(mm.card){var r=document.createElement("div");r.className="rcard";r.innerHTML='<div class="rt">'+esc(mm.card)+'</div><div class="rb">'+esc(mm.card)+' で作成</div>';d.appendChild(r)}
+      log.appendChild(d);if(s.typeLast&&i===s.chat.length-1)extra=typeInto(sp,mm.t);else sp.textContent=mm.t});
+    var inp=$("#chatIn");if(s.input){if(s.typeIn)extra=typeInto(inp,s.input);else inp.textContent=s.input}else inp.textContent=""}
+  if(s.scr==="Term"){var out=$("#termOut");out.innerHTML="";(s.term||[]).forEach(function(l,i){var d=document.createElement("div");d.className=l.p?"":"o";if(l.p){var p=document.createElement("span");p.className="p";p.textContent="$ ";d.appendChild(p)}var sp=document.createElement("span");d.appendChild(sp);out.appendChild(d);
+      if(s.typeLast&&i===s.term.length-1)extra=typeInto(sp,l.t);else sp.textContent=l.t})}
+  $("#stepNo").textContent=(si+1)+" / "+steps.length;$("#capNo").textContent=si+1;$("#capt").textContent=s.cap;$("#tip").textContent=s.tip;
+  $("#demoNote").textContent=app.how==="code"?"この方法はClaude Code専用で、ブラウザ版のClaudeチャットでは使えません。黒い画面の出力やAIの返事は例です。":"メニュー名やボタンの位置は、Claudeの更新で変わることがあります。AIの返事は例です。";
+  $("#prevB").disabled=si===0;$("#nextB").disabled=si===steps.length-1;$("#playB").textContent=playing?"■ 停止":(si===steps.length-1?"▶ 最初から":"▶ 再生");
+  paintList();requestAnimationFrame(function(){moveCur(s.cur)});
+  if(playing){if(si<steps.length-1){timer=setTimeout(function(){si++;show()},3300+extra)}else{timer=setTimeout(function(){playing=false;show()},2400+extra)}}
+}
+$("#demoTabs").addEventListener("click",function(e){var b=e.target.closest(".tab");if(!b)return;setDemo(METHODS[+b.dataset.i].ex[0],true)});
+$("#exs").addEventListener("click",function(e){var b=e.target.closest("[data-ex]");if(b)setDemo(b.dataset.ex,true)});
+document.addEventListener("click",function(e){var b=e.target.closest("[data-demo]");if(!b)return;setDemo(b.dataset.demo,true);$("#irekata").scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"})});
+$("#stepList").addEventListener("click",function(e){var b=e.target.closest("[data-s]");if(!b)return;playing=false;si=+b.dataset.s;show()});
+$("#prevB").addEventListener("click",function(){playing=false;if(si>0)si--;show()});
+$("#nextB").addEventListener("click",function(){playing=false;if(si<steps.length-1)si++;show()});
+$("#playB").addEventListener("click",function(){if(playing){playing=false}else{if(si===steps.length-1)si=0;playing=true}show()});
+window.addEventListener("resize",function(){moveCur(steps[si].cur);drawAllOnce()});
+setDemo("cv",false);
+
+/* pricing panel + simulator */
+var PL={cl:["Claude本体",[["無料プラン",0],["Pro",20],["Max",100]]],
+ hg:["Higgsfield",[["使わない",-1],["Basic（120クレジット）",9,"速い動画モデルで約7本、または画像約60枚"],["Pro（600クレジット）",29,"Basicの5倍の量"],["Max（1,800クレジット）",79,"Basicの15倍の量"]]],
+ rw:["Runway",[["使わない",-1],["Pro（2,250クレジット）",35,"Gen-4.5の動画が合計約187秒"],["Max（9,500クレジット）",95,"Gen-4.5の動画が合計約791秒"]]],
+ kl:["Kling",[["使わない",-1],["Standard（660クレジット）",10,"10秒・1080pの動画が約8本"],["Pro（3,000クレジット）",37,"10秒・1080pの動画が約37本"]]],
+ sn:["Suno",[["使わない",-1],["無料プラン",0,"1日約10曲。商用は不可"],["Pro（2,500クレジット）",10,"約500曲を生成、ダウンロードは月20曲"],["Premier（10,000クレジット）",30,"約2,000曲を生成、ダウンロードは月60曲"]]],
+ hy:["HeyGen",[["使わない",-1],["Creator（600クレジット）",29,"アバターの種類により1分あたり約0.2〜2.3ドル相当"],["Pro（1,000クレジット）",49,"Creatorの約1.7倍の量"]]],
+ el:["ElevenLabs",[["使わない",-1],["無料プラン",0,"読み上げ約10分。商用は不可"],["Starter（3万クレジット）",6,"読み上げ約30分"],["Creator（12.1万クレジット）",22,"読み上げ約2時間"]]]};
+var URLAPPS=["hg","rw","kl","sn","hy","el"],simSel={cl:0,hg:0,rw:0,kl:0,sn:0,hy:0,el:0},simX=0,simXL=0,simRate=158;
+var PRESET=[["0円で試す",{cl:0,sn:1}],["リール量産",{cl:1,hg:2,sn:2}],["顔出しなし解説",{cl:1,hy:1,el:2}],["映像の質にこだわる",{cl:1,rw:1,sn:2}]];
+function simBuild(){var h='<div class="simp"><b>よくある組み合わせ</b>'+PRESET.map(function(p,i){return '<button class="chip" type="button" data-pre="'+i+'">'+p[0]+'</button>'}).join("")+'</div>';
+  Object.keys(PL).forEach(function(k){h+='<label for="sim-'+k+'">'+PL[k][0]+'<select id="sim-'+k+'" data-k="'+k+'">'+PL[k][1].map(function(o,i){return '<option value="'+i+'">'+o[0]+(o[1]>0?"　月"+o[1]+"ドル":o[1]===0?"　0円":"")+'</option>'}).join("")+'</select></label>'});
+  h+='<label for="sim-x">Xへの投稿（月の本数、リンクなし）<input type="number" id="sim-x" min="0" max="3000" value="0" inputmode="numeric"></label><label for="sim-xl">Xへの投稿（月の本数、リンク付き）<input type="number" id="sim-xl" min="0" max="3000" value="0" inputmode="numeric"></label><label for="sim-rate">1ドルを何円で計算するか<input type="number" id="sim-rate" min="80" max="300" value="158" inputmode="numeric"></label>';
+  $("#simForm").innerHTML=h;simPaint()}
+function simPaint(){var tot=0,rows=[],notes=[],warn=[],nurl=0;
+  Object.keys(PL).forEach(function(k){var o=PL[k][1][simSel[k]];$("#sim-"+k).value=simSel[k];if(o[1]<0)return;tot+=o[1];rows.push([PL[k][0]+"　"+o[0],o[1]]);if(o[2])notes.push(PL[k][0]+"　"+o[2]);if(URLAPPS.indexOf(k)>=0)nurl++});
+  var xc=simX*0.015+simXL*0.2;if(xc>0){tot+=xc;rows.push(["X公式MCP　"+(simX+simXL)+"投稿",xc])}
+  if(simSel.cl===0&&nurl>1)warn.push("無料プランのClaudeは、URLを貼る方式を1つまでしか追加できません。2つ以上つなぐならProが必要です。");
+  if(simSel.cl===0&&simSel.hy>0)warn.push("HeyGenの接続には、Claudeの有料プランが必要です。");
+  if(simSel.cl===0&&xc>0)warn.push("X公式MCPはClaude Codeで使います。Claude CodeはPro以上が対象です。");
+  if(simSel.sn===1)warn.push("Sunoの無料プランで作った曲は、商用利用できません。");
+  if(simSel.el===1)warn.push("ElevenLabsの無料プランは、商用利用できません。");
+  var yen=Math.round(tot*simRate/10)*10;
+  $("#simOut").innerHTML='<div class="simt"><span>毎月の合計（目安）</span><b>約'+yen.toLocaleString("ja-JP")+'円</b><i>'+(Math.round(tot*100)/100)+'ドル × '+simRate+'円、税別</i></div>'+
+   '<ul class="simr">'+rows.map(function(r){return '<li><span>'+esc(r[0])+'</span><b>'+(r[1]===0?"0円":(Math.round(r[1]*100)/100)+"ドル")+'</b></li>'}).join("")+'</ul>'+
+   (notes.length?'<div class="lbl" style="margin-top:8px">この構成で作れる量の目安</div><ul class="simn">'+notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join("")+'</ul>':'')+
+   warn.map(function(wn){return '<div class="caution" style="margin-top:8px"><b>注意</b>　'+esc(wn)+'</div>'}).join("")}
+$("#simForm").addEventListener("change",function(e){var k=e.target.dataset.k;if(k)simSel[k]=+e.target.value;simX=Math.max(0,+$("#sim-x").value||0);simXL=Math.max(0,+$("#sim-xl").value||0);simRate=Math.min(300,Math.max(80,+$("#sim-rate").value||158));simPaint()});
+$("#simForm").addEventListener("input",function(e){if(e.target.type==="number"){simX=Math.max(0,+$("#sim-x").value||0);simXL=Math.max(0,+$("#sim-xl").value||0);simRate=Math.min(300,Math.max(80,+$("#sim-rate").value||158));simPaint()}});
+$("#simForm").addEventListener("click",function(e){var b=e.target.closest("[data-pre]");if(!b)return;Object.keys(simSel).forEach(function(k){simSel[k]=0});var p=PRESET[+b.dataset.pre][1];Object.keys(p).forEach(function(k){simSel[k]=p[k]});simX=simXL=0;$("#sim-x").value=0;$("#sim-xl").value=0;simPaint()});
+$("#simForm").addEventListener("submit",function(e){e.preventDefault()});
+simBuild();
+function openPrice(scroll){var p=$("#pricePanel"),b=$("#priceBtn");p.hidden=false;b.setAttribute("aria-expanded","true");$("#priceMore").textContent="料金の解説を閉じる ▲";if(scroll)p.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"})}
+$("#priceBtn").addEventListener("click",function(){var p=$("#pricePanel");if(p.hidden)openPrice(true);else{p.hidden=true;this.setAttribute("aria-expanded","false");$("#priceMore").textContent="タップで料金をくわしく見る ▼"}});
+document.addEventListener("click",function(e){var a=e.target.closest('a[href="#ryokin"]');if(a){e.preventDefault();openPrice(true)}});
+$("#toTop").addEventListener("click",function(){window.scrollTo({top:0,behavior:reduce?"auto":"smooth"})});
+
+if(location.hash==="#ryokin")openPrice(true);
+regAll();readC();paintTheme();
+if(reduce){drawAllOnce()}else{started=true;requestAnimationFrame(loop)}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){drawAllOnce()});
+})();
+
+</script>
+</body>
+</html>
